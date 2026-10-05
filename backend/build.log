@@ -1,0 +1,858 @@
+npm notice run backend@0.0.1 build
+npm notice run nest build
+[96msrc/app.controller.ts[0m:[93m2[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module './app.service' or its corresponding type declarations.
+
+[7m2[0m import { AppService } from './app.service';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~[0m
+[96msrc/app.controller.ts[0m:[93m8[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m8[0m   @Get()
+[7m [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/app.controller.ts[0m:[93m8[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => string)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => string)'.
+
+[7m8[0m   @Get()
+[7m [0m [91m   ~~~~~[0m
+[96msrc/app.module.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './app.controller' or its corresponding type declarations.
+
+[7m2[0m import { AppController } from './app.controller';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m3[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module './app.service' or its corresponding type declarations.
+
+[7m3[0m import { AppService } from './app.service';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m4[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module './prisma/prisma.module' or its corresponding type declarations.
+
+[7m4[0m import { PrismaModule } from './prisma/prisma.module';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m5[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module './auth/auth.module' or its corresponding type declarations.
+
+[7m5[0m import { AuthModule } from './auth/auth.module';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m6[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module './users/users.module' or its corresponding type declarations.
+
+[7m6[0m import { UsersModule } from './users/users.module';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m7[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module './tasks/tasks.module' or its corresponding type declarations.
+
+[7m7[0m import { TasksModule } from './tasks/tasks.module';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m8[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './calendar/calendar.module' or its corresponding type declarations.
+
+[7m8[0m import { CalendarModule } from './calendar/calendar.module';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m9[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './folders/folders.module' or its corresponding type declarations.
+
+[7m9[0m import { FoldersModule } from './folders/folders.module';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m10[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './documents/documents.module' or its corresponding type declarations.
+
+[7m10[0m import { DocumentsModule } from './documents/documents.module';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m11[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './notepad/notepad.module' or its corresponding type declarations.
+
+[7m11[0m import { NotepadModule } from './notepad/notepad.module';
+[7m  [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m12[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module './stats/stats.module' or its corresponding type declarations.
+
+[7m12[0m import { StatsModule } from './stats/stats.module';
+[7m  [0m [91m                            ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m2[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module './auth.service' or its corresponding type declarations.
+
+[7m2[0m import { AuthService } from './auth.service';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m3[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-auth.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateAuthDto } from './dto/create-auth.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m4[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-auth.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateAuthDto } from './dto/update-auth.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m10[0m   @Post()
+[7m  [0m [91m  ~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/auth/auth.controller.ts[0m:[93m10[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createAuthDto: CreateAuthDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createAuthDto: CreateAuthDto) => any)'.
+
+[7m10[0m   @Post()
+[7m  [0m [91m   ~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m11[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m11[0m   create(@Body() createAuthDto: CreateAuthDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m15[0m   @Get()
+[7m  [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/auth/auth.controller.ts[0m:[93m15[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+
+[7m15[0m   @Get()
+[7m  [0m [91m   ~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m20[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m  ~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/auth/auth.controller.ts[0m:[93m20[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m   ~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m21[0m:[93m11[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m21[0m   findOne(@Param('id') id: string) {
+[7m  [0m [91m          ~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m25[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/auth/auth.controller.ts[0m:[93m25[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateAuthDto: UpdateAuthDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateAuthDto: UpdateAuthDto) => any)'.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m26[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m26[0m:[93m35[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
+[7m  [0m [91m                                  ~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m30[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/auth/auth.controller.ts[0m:[93m30[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m31[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m31[0m   remove(@Param('id') id: string) {
+[7m  [0m [91m         ~[0m
+[96msrc/auth/auth.module.ts[0m:[93m2[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module './auth.service' or its corresponding type declarations.
+
+[7m2[0m import { AuthService } from './auth.service';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.module.ts[0m:[93m3[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './auth.controller' or its corresponding type declarations.
+
+[7m3[0m import { AuthController } from './auth.controller';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-auth.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateAuthDto } from './dto/create-auth.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.service.ts[0m:[93m3[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-auth.dto' or its corresponding type declarations.
+
+[7m3[0m import { UpdateAuthDto } from './dto/update-auth.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/dto/update-auth.dto.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-auth.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateAuthDto } from './create-auth.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m2[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './calendar.service' or its corresponding type declarations.
+
+[7m2[0m import { CalendarService } from './calendar.service';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m3[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-calendar.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateCalendarDto } from './dto/create-calendar.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m4[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-calendar.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateCalendarDto } from './dto/update-calendar.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m10[0m   @Post()
+[7m  [0m [91m  ~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/calendar/calendar.controller.ts[0m:[93m10[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createCalendarDto: CreateCalendarDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createCalendarDto: CreateCalendarDto) => any)'.
+
+[7m10[0m   @Post()
+[7m  [0m [91m   ~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m11[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m11[0m   create(@Body() createCalendarDto: CreateCalendarDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m15[0m   @Get()
+[7m  [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/calendar/calendar.controller.ts[0m:[93m15[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+
+[7m15[0m   @Get()
+[7m  [0m [91m   ~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m20[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m  ~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/calendar/calendar.controller.ts[0m:[93m20[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m   ~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m21[0m:[93m11[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m21[0m   findOne(@Param('id') id: string) {
+[7m  [0m [91m          ~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m25[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/calendar/calendar.controller.ts[0m:[93m25[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateCalendarDto: UpdateCalendarDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateCalendarDto: UpdateCalendarDto) => any)'.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m26[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateCalendarDto: UpdateCalendarDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m26[0m:[93m35[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateCalendarDto: UpdateCalendarDto) {
+[7m  [0m [91m                                  ~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m30[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/calendar/calendar.controller.ts[0m:[93m30[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.controller.ts[0m:[93m31[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m31[0m   remove(@Param('id') id: string) {
+[7m  [0m [91m         ~[0m
+[96msrc/calendar/calendar.module.ts[0m:[93m2[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './calendar.service' or its corresponding type declarations.
+
+[7m2[0m import { CalendarService } from './calendar.service';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.module.ts[0m:[93m3[0m:[93m36[0m - [91merror[0m[90m TS2307: [0mCannot find module './calendar.controller' or its corresponding type declarations.
+
+[7m3[0m import { CalendarController } from './calendar.controller';
+[7m [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.service.ts[0m:[93m2[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-calendar.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateCalendarDto } from './dto/create-calendar.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/calendar.service.ts[0m:[93m3[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-calendar.dto' or its corresponding type declarations.
+
+[7m3[0m import { UpdateCalendarDto } from './dto/update-calendar.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/calendar/dto/update-calendar.dto.ts[0m:[93m2[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-calendar.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateCalendarDto } from './create-calendar.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m2[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './documents.service' or its corresponding type declarations.
+
+[7m2[0m import { DocumentsService } from './documents.service';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m3[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-document.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateDocumentDto } from './dto/create-document.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m4[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-document.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateDocumentDto } from './dto/update-document.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m10[0m   @Post()
+[7m  [0m [91m  ~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/documents/documents.controller.ts[0m:[93m10[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createDocumentDto: CreateDocumentDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createDocumentDto: CreateDocumentDto) => any)'.
+
+[7m10[0m   @Post()
+[7m  [0m [91m   ~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m11[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m11[0m   create(@Body() createDocumentDto: CreateDocumentDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m15[0m   @Get()
+[7m  [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/documents/documents.controller.ts[0m:[93m15[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+
+[7m15[0m   @Get()
+[7m  [0m [91m   ~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m20[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m  ~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/documents/documents.controller.ts[0m:[93m20[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m   ~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m21[0m:[93m11[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m21[0m   findOne(@Param('id') id: string) {
+[7m  [0m [91m          ~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m25[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/documents/documents.controller.ts[0m:[93m25[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateDocumentDto: UpdateDocumentDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateDocumentDto: UpdateDocumentDto) => any)'.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m26[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m26[0m:[93m35[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto) {
+[7m  [0m [91m                                  ~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m30[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/documents/documents.controller.ts[0m:[93m30[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.controller.ts[0m:[93m31[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m31[0m   remove(@Param('id') id: string) {
+[7m  [0m [91m         ~[0m
+[96msrc/documents/documents.module.ts[0m:[93m2[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './documents.service' or its corresponding type declarations.
+
+[7m2[0m import { DocumentsService } from './documents.service';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.module.ts[0m:[93m3[0m:[93m37[0m - [91merror[0m[90m TS2307: [0mCannot find module './documents.controller' or its corresponding type declarations.
+
+[7m3[0m import { DocumentsController } from './documents.controller';
+[7m [0m [91m                                    ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.service.ts[0m:[93m2[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-document.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateDocumentDto } from './dto/create-document.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/documents.service.ts[0m:[93m3[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-document.dto' or its corresponding type declarations.
+
+[7m3[0m import { UpdateDocumentDto } from './dto/update-document.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/documents/dto/update-document.dto.ts[0m:[93m2[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-document.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateDocumentDto } from './create-document.dto';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/dto/update-folder.dto.ts[0m:[93m2[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-folder.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateFolderDto } from './create-folder.dto';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m2[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './folders.service' or its corresponding type declarations.
+
+[7m2[0m import { FoldersService } from './folders.service';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m3[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-folder.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateFolderDto } from './dto/create-folder.dto';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m4[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-folder.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateFolderDto } from './dto/update-folder.dto';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m10[0m   @Post()
+[7m  [0m [91m  ~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/folders/folders.controller.ts[0m:[93m10[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createFolderDto: CreateFolderDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createFolderDto: CreateFolderDto) => any)'.
+
+[7m10[0m   @Post()
+[7m  [0m [91m   ~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m11[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m11[0m   create(@Body() createFolderDto: CreateFolderDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m15[0m   @Get()
+[7m  [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/folders/folders.controller.ts[0m:[93m15[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+
+[7m15[0m   @Get()
+[7m  [0m [91m   ~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m20[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m  ~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/folders/folders.controller.ts[0m:[93m20[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m   ~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m21[0m:[93m11[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m21[0m   findOne(@Param('id') id: string) {
+[7m  [0m [91m          ~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m25[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/folders/folders.controller.ts[0m:[93m25[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateFolderDto: UpdateFolderDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateFolderDto: UpdateFolderDto) => any)'.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m26[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateFolderDto: UpdateFolderDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m26[0m:[93m35[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateFolderDto: UpdateFolderDto) {
+[7m  [0m [91m                                  ~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m30[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/folders/folders.controller.ts[0m:[93m30[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.controller.ts[0m:[93m31[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m31[0m   remove(@Param('id') id: string) {
+[7m  [0m [91m         ~[0m
+[96msrc/folders/folders.module.ts[0m:[93m2[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './folders.service' or its corresponding type declarations.
+
+[7m2[0m import { FoldersService } from './folders.service';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.module.ts[0m:[93m3[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './folders.controller' or its corresponding type declarations.
+
+[7m3[0m import { FoldersController } from './folders.controller';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.service.ts[0m:[93m2[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-folder.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateFolderDto } from './dto/create-folder.dto';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/folders/folders.service.ts[0m:[93m3[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-folder.dto' or its corresponding type declarations.
+
+[7m3[0m import { UpdateFolderDto } from './dto/update-folder.dto';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/main.ts[0m:[93m4[0m:[93m27[0m - [91merror[0m[90m TS2307: [0mCannot find module './app.module' or its corresponding type declarations.
+
+[7m4[0m import { AppModule } from './app.module';
+[7m [0m [91m                          ~~~~~~~~~~~~~~[0m
+[96msrc/notepad/dto/update-notepad.dto.ts[0m:[93m2[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-notepad.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateNotepadDto } from './create-notepad.dto';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m2[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './notepad.service' or its corresponding type declarations.
+
+[7m2[0m import { NotepadService } from './notepad.service';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m3[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-notepad.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateNotepadDto } from './dto/create-notepad.dto';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m4[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-notepad.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateNotepadDto } from './dto/update-notepad.dto';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m10[0m   @Post()
+[7m  [0m [91m  ~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/notepad/notepad.controller.ts[0m:[93m10[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createNotepadDto: CreateNotepadDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createNotepadDto: CreateNotepadDto) => any)'.
+
+[7m10[0m   @Post()
+[7m  [0m [91m   ~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m11[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m11[0m   create(@Body() createNotepadDto: CreateNotepadDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m15[0m   @Get()
+[7m  [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/notepad/notepad.controller.ts[0m:[93m15[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+
+[7m15[0m   @Get()
+[7m  [0m [91m   ~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m20[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m  ~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/notepad/notepad.controller.ts[0m:[93m20[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m   ~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m21[0m:[93m11[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m21[0m   findOne(@Param('id') id: string) {
+[7m  [0m [91m          ~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m25[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/notepad/notepad.controller.ts[0m:[93m25[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateNotepadDto: UpdateNotepadDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateNotepadDto: UpdateNotepadDto) => any)'.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m26[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateNotepadDto: UpdateNotepadDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m26[0m:[93m35[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateNotepadDto: UpdateNotepadDto) {
+[7m  [0m [91m                                  ~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m30[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/notepad/notepad.controller.ts[0m:[93m30[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.controller.ts[0m:[93m31[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m31[0m   remove(@Param('id') id: string) {
+[7m  [0m [91m         ~[0m
+[96msrc/notepad/notepad.module.ts[0m:[93m2[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module './notepad.service' or its corresponding type declarations.
+
+[7m2[0m import { NotepadService } from './notepad.service';
+[7m [0m [91m                               ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.module.ts[0m:[93m3[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module './notepad.controller' or its corresponding type declarations.
+
+[7m3[0m import { NotepadController } from './notepad.controller';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.service.ts[0m:[93m2[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-notepad.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateNotepadDto } from './dto/create-notepad.dto';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/notepad/notepad.service.ts[0m:[93m3[0m:[93m34[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-notepad.dto' or its corresponding type declarations.
+
+[7m3[0m import { UpdateNotepadDto } from './dto/update-notepad.dto';
+[7m [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/prisma/prisma.module.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './prisma.service' or its corresponding type declarations.
+
+[7m2[0m import { PrismaService } from './prisma.service';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/prisma/prisma.service.ts[0m:[93m3[0m:[93m30[0m - [91merror[0m[90m TS6059: [0mFile '/home/estebantrujillo/Proyectos/ejercicio/backend/generated/prisma/client.ts' is not under 'rootDir' '/home/estebantrujillo/Proyectos/ejercicio/backend/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/home/estebantrujillo/Proyectos/ejercicio/backend/package.json' has field "type" with value "module"
+
+[7m3[0m import { PrismaClient } from '../../generated/prisma/client.js';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/dto/update-stat.dto.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-stat.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateStatDto } from './create-stat.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module './stats.service' or its corresponding type declarations.
+
+[7m2[0m import { StatsService } from './stats.service';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m3[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-stat.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateStatDto } from './dto/create-stat.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m4[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-stat.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateStatDto } from './dto/update-stat.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m10[0m   @Post()
+[7m  [0m [91m  ~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/stats/stats.controller.ts[0m:[93m10[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createStatDto: CreateStatDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((createStatDto: CreateStatDto) => any)'.
+
+[7m10[0m   @Post()
+[7m  [0m [91m   ~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m11[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m11[0m   create(@Body() createStatDto: CreateStatDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m15[0m   @Get()
+[7m  [0m [91m  ~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/stats/stats.controller.ts[0m:[93m15[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => any)'.
+
+[7m15[0m   @Get()
+[7m  [0m [91m   ~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m20[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m  ~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/stats/stats.controller.ts[0m:[93m20[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m20[0m   @Get(':id')
+[7m  [0m [91m   ~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m21[0m:[93m11[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m21[0m   findOne(@Param('id') id: string) {
+[7m  [0m [91m          ~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m25[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/stats/stats.controller.ts[0m:[93m25[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateStatDto: UpdateStatDto) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string, updateStatDto: UpdateStatDto) => any)'.
+
+[7m25[0m   @Patch(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m26[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateStatDto: UpdateStatDto) {
+[7m  [0m [91m         ~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m26[0m:[93m35[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m26[0m   update(@Param('id') id: string, @Body() updateStatDto: UpdateStatDto) {
+[7m  [0m [91m                                  ~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m30[0m:[93m3[0m - [91merror[0m[90m TS1241: [0mUnable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m  ~~~~~~~~~~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.decorators.legacy.d.ts[0m:[93m21[0m:[93m82[0m
+    [7m21[0m declare type MethodDecorator = <T>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>) => TypedPropertyDescriptor<T> | void;
+    [7m  [0m [96m                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'descriptor' was not provided.
+[96msrc/stats/stats.controller.ts[0m:[93m30[0m:[93m4[0m - [91merror[0m[90m TS1270: [0mDecorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | ((id: string) => any)'.
+
+[7m30[0m   @Delete(':id')
+[7m  [0m [91m   ~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.controller.ts[0m:[93m31[0m:[93m10[0m - [91merror[0m[90m TS1206: [0mDecorators are not valid here.
+
+[7m31[0m   remove(@Param('id') id: string) {
+[7m  [0m [91m         ~[0m
+[96msrc/stats/stats.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module './stats.service' or its corresponding type declarations.
+
+[7m2[0m import { StatsService } from './stats.service';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.module.ts[0m:[93m3[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module './stats.controller' or its corresponding type declarations.
+
+[7m3[0m import { StatsController } from './stats.controller';
+[7m [0m [91m                                ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-stat.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateStatDto } from './dto/create-stat.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/stats/stats.service.ts[0m:[93m3[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-stat.dto' or its corresponding type declarations.
+
+[7m3[0m import { UpdateStatDto } from './dto/update-stat.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tasks/dto/update-task.dto.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './create-task.dto' or its corresponding type declarations.
+
+[7m2[0m import { CreateTaskDto } from './create-task.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tasks/tasks.controller.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module './tasks.service' or its corresponding type declarations.
+
+[7m2[0m import { TasksService } from './tasks.service';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~[0m
+[96msrc/tasks/tasks.controller.ts[0m:[93m3[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/create-task.dto' or its corresponding type declarations.
+
+[7m3[0m import { CreateTaskDto } from './dto/create-task.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tasks/tasks.controller.ts[0m:[93m4[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module './dto/update-task.dto' or its corresponding type declarations.
+
+[7m4[0m import { UpdateTaskDto } from './dto/update-task.dto';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tasks/tasks.controller.ts[0m:[93m10[0m:[93m3[0m - [91merror[0m[90m TS1241:Found 201 error(s).
+
