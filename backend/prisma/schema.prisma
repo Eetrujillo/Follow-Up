@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+    
+}
+
+model Folder {
+  id            String     @id
+  userId        String
+  name          String
+  isNotesFolder Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  Document      Document[]
+  User          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CalendarEvent {
+  id           String   @id
+  userId       String
+  title        String
+  colorHex     String
+  eventDate    DateTime
+  createdAt    DateTime @default(now())
+  linkedTaskId String?  @unique
+  Task         Task?    @relation(fields: [linkedTaskId], references: [id])
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id          String   @id
+  folderId    String
+  userId      String
+  title       String
+  contentHtml String
+  fromNotepad Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Folder      Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotepadDraft {
+  id             String   @id
+  userId         String   @unique
+  contentHtml    String
+  lastModifiedAt DateTime
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StatsStreak {
+  id                String   @id
+  userId            String   @unique
+  lastVisitDate     DateTime
+  currentStreakDays Int      @default(0)
+  updatedAt         DateTime
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id            String         @id
+  userId        String
+  description   String
+  isCompleted   Boolean        @default(false)
+  origin        TaskOrigin     @default(DASHBOARD)
+  dueDate       DateTime?
+  createdAt     DateTime       @default(now())
+  completedAt   DateTime?
+  CalendarEvent CalendarEvent?
+  User          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String          @id
+  fullName      String
+  email         String          @unique
+  passwordHash  String
+  createdAt     DateTime        @default(now())
+  CalendarEvent CalendarEvent[]
+  Document      Document[]
+  Folder        Folder[]
+  NotepadDraft  NotepadDraft?
+  StatsStreak   StatsStreak?
+  Task          Task[]
+}
+
+enum TaskOrigin {
+  DASHBOARD
+  CALENDAR
+}
