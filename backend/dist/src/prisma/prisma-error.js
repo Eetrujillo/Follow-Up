@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rethrowPrismaError = rethrowPrismaError;
 const common_1 = require("@nestjs/common");
-const client_1 = require("../../generated/prisma/client");
+const client_1 = require("@prisma/client");
 function rethrowPrismaError(error) {
     if (error instanceof common_1.HttpException) {
         throw error;
