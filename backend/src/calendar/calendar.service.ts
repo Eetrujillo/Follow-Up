@@ -98,9 +98,23 @@ export class CalendarService {
   }
 
   async findAll(userId: string, month?: number, year?: number) {
+    const where: Prisma.CalendarEventWhereInput = { userId };
+
+    if (year !== undefined && month !== undefined) {
+      where.eventDate = {
+        gte: new Date(year, month - 1, 1),
+        lt: new Date(year, month, 1),
+      };
+    } else if (year !== undefined) {
+      where.eventDate = {
+        gte: new Date(year, 0, 1),
+        lt: new Date(year + 1, 0, 1),
+      };
+    }
+
     try {
       return await this.prisma.calendarEvent.findMany({
-        where: { userId },
+        where,
         include: {
           Task: true,
         },

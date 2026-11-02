@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from
 import { CalendarService } from './calendar.service';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
+import { ListCalendarQueryDto } from './dto/list-calendar-query.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PublicUser } from '../users/users.service';
 
@@ -15,12 +16,8 @@ export class CalendarController {
   }
 
   @Get()
-  findAll(
-    @CurrentUser() user: PublicUser,
-    @Query('month') month?: number,
-    @Query('year') year?: number,
-  ) {
-    return this.calendarService.findAll(user.id, month, year);
+  findAll(@CurrentUser() user: PublicUser, @Query() query: ListCalendarQueryDto) {
+    return this.calendarService.findAll(user.id, query.month, query.year);
   }
 
   @Patch(':id')
