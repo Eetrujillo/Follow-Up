@@ -51,11 +51,11 @@ and was not part of the selected option): migrating `library`, `notepad` and
 | T2 | S2 | Backend: `@Public()` decorator + `JwtAuthGuard` as `APP_GUARD` in `AppModule`; mark `GET /`, `auth/register`, `auth/login` public. | inline | |
 | T3 | S3 | Backend: `TasksService` and `CalendarService` take `userId` as a parameter; controllers pass the token user; delete `getDefaultUserId()`. | inline | `65a9261` |
 | T4 | S2,S3 | Backend: scope `UsersController`: `GET /users/:id` only for self; decide `POST /users` (duplicate of register). | inline | `65a9261` |
-| T5 | S1,S7 | Frontend: `authInterceptor` attaching the Bearer token, registered in `app.config.ts`. | inline | |
-| T6 | S1,S4,S7 | Frontend: `Login`, `Signup` and `authGuard` use `AuthApiService`; guard resolves the session through `GET /auth/me`. | inline | |
-| T7 | S5 | Frontend: `TaskService` and calendar read/write through `TasksApiService` and `CalendarApiService`; remove localStorage persistence for them. | inline | |
-| T8 | S4,S6 | Delete `JsonbinService`, `UserService`, `jsonbin` usage, `db.json` and the `json-server` script; remove the hardcoded Cohere key from `ai.service.ts` (call disabled until a backend endpoint exists). | inline | |
-| T9 | S1-S7 | Verify: `node --test` green, both builds exit 0, manual login round trip, and per-user isolation. | inline | |
+| T5 | S1,S7 | Frontend: `authInterceptor` attaching the Bearer token, registered in `app.config.ts`. | inline | `c172453` |
+| T6 | S1,S4,S7 | Frontend: `Login`, `Signup` and `authGuard` use `AuthApiService`; guard resolves the session through `GET /auth/me`. | inline | `c172453` |
+| T7 | S5 | Frontend: `TaskService` and calendar read/write through `TasksApiService` and `CalendarApiService`; remove localStorage persistence for them. | inline | `17dab49` |
+| T8 | S4,S6 | Delete `JsonbinService`, `UserService`, `jsonbin` usage, `db.json` and the `json-server` script; remove the hardcoded Cohere key from `ai.service.ts`. | inline | `17dab49` |
+| T9 | S1-S8 | Verify: `node --test` green, both builds exit 0, two-user isolation, cleanup. | inline | `cf7acd4` |
 
 ## Log
 
@@ -85,8 +85,15 @@ and was not part of the selected option): migrating `library`, `notepad` and
   top of that base, never the 35k generated-line deletions that belong to the base
   branch. Delivery is two chained PRs: `chore/repo-hygiene` -> `main`, then
   `feat/api-migration` -> `chore/repo-hygiene`.
-- L10 (evidence): T1 red was observed on the running server (`/tasks` 200, `/calendar`
-  200, `/users/:id` 404, invalid register 500). T1b root cause was proven by running
-  the same code twice: `tsx src/main.ts` gave 500 with no validation, `node
-  dist/src/main.js` gave 400 with the six field errors. Green after T2-T4: 7/7 tests
-  pass on a fresh instance, `npm run build` exits 0.
+- L11 (evidence): isolation was proven through the public HTTP interface with two
+  throwaway users on a fresh instance: 13/13 checks, including A creates a task that B
+  cannot list (0 rows), patch (404) or delete (404), and B reading A's user (403). The
+  four test users from both runs were deleted with Prisma and a login for a removed
+  user answers 401 again. Slice boundary: `c172453` + `b3d8a10` (auth), `17dab49` +
+  `cf7acd4` (data).
+- L12 (limitation): the frontend was verified by build and by the API contract, not by
+  driving a browser. Login -> dashboard -> create/edit task -> calendar CRUD is the
+  remaining manual check, and `ng test` was not run (no Karma browser configured here);
+  `task.spec.ts` and `storage.spec.ts` may need updating for the new TaskService.
+- L13 (limitation): `library`, `notepad` and `statistics` still use localStorage, and
+  AI task generation is disabled until a backend endpoint exists, by explicit scope.
