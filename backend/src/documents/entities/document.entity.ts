@@ -1,5 +1,10 @@
 export class Document {
-  id!: number;
+  id!: string;
+  folderId!: string;
+  userId!: string;
   title!: string;
-  content?: string;
+  contentHtml!: string;
+  fromNotepad!: boolean;
+  createdAt!: Date;
+  updatedAt!: Date;
 }

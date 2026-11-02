@@ -1,14 +1,25 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Put } from '@nestjs/common';
 import { NotepadService } from './notepad.service';
-import { CreateNotepadDto } from './dto/create-notepad.dto';
-import { UpdateNotepadDto } from './dto/update-notepad.dto';
+import { SaveNotepadDto } from './dto/save-notepad.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PublicUser } from '../users/users.service';
 
 @Controller('notepad')
 export class NotepadController {
-  constructor(private readonly notepadService: NotepadService = new NotepadService()) {}
-  @Post() create(@Body() body: CreateNotepadDto) { return this.notepadService.create(body); }
-  @Get() findAll() { return this.notepadService.findAll(); }
-  @Get(':id') findOne(@Param('id') id: string) { return this.notepadService.findOne(+id); }
-  @Patch(':id') update(@Param('id') id: string, @Body() body: UpdateNotepadDto) { return this.notepadService.update(+id, body); }
-  @Delete(':id') remove(@Param('id') id: string) { return this.notepadService.remove(+id); }
+  constructor(@Inject(NotepadService) private readonly notepadService: NotepadService) {}
+
+  @Get()
+  get(@CurrentUser() user: PublicUser) {
+    return this.notepadService.get(user.id);
+  }
+
+  @Put()
+  save(@CurrentUser() user: PublicUser, @Body() dto: SaveNotepadDto) {
+    return this.notepadService.save(user.id, dto);
+  }
+
+  @Delete()
+  remove(@CurrentUser() user: PublicUser) {
+    return this.notepadService.remove(user.id);
+  }
 }

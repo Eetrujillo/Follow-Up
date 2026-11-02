@@ -1,4 +1,7 @@
 export class Folder {
-  id!: number;
+  id!: string;
+  userId!: string;
   name!: string;
+  isNotesFolder!: boolean;
+  createdAt!: Date;
 }

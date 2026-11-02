@@ -1,10 +1,52 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { PrismaService } from '../prisma/prisma.service';
+import { rethrowPrismaError } from '../prisma/prisma-error';
+import { SaveNotepadDto } from './dto/save-notepad.dto';
 
 @Injectable()
 export class NotepadService {
-  create(_body?: unknown) { return 'This action adds a new notepad'; }
-  findAll() { return 'This action returns all notepad'; }
-  findOne(id: number) { return `This action returns a #${id} notepad`; }
-  update(id: number, _body?: unknown) { return `This action updates a #${id} notepad`; }
-  remove(id: number) { return `This action removes a #${id} notepad`; }
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+
+  async get(userId: string) {
+    try {
+      const draft = await this.prisma.notepadDraft.findUnique({ where: { userId } });
+      return draft ?? { id: null, userId, contentHtml: '', lastModifiedAt: null };
+    } catch (error) {
+      rethrowPrismaError(error);
+    }
+  }
+
+  async save(userId: string, dto: SaveNotepadDto) {
+    try {
+      const now = new Date();
+      return await this.prisma.notepadDraft.upsert({
+        where: { userId },
+        create: {
+          id: randomUUID(),
+          userId,
+          contentHtml: dto.contentHtml,
+          lastModifiedAt: now,
+        },
+        update: {
+          contentHtml: dto.contentHtml,
+          lastModifiedAt: now,
+        },
+      });
+    } catch (error) {
+      rethrowPrismaError(error);
+    }
+  }
+
+  async remove(userId: string) {
+    try {
+      const draft = await this.prisma.notepadDraft.findUnique({ where: { userId } });
+      if (draft) {
+        await this.prisma.notepadDraft.delete({ where: { userId } });
+      }
+      return { deleted: Boolean(draft) };
+    } catch (error) {
+      rethrowPrismaError(error);
+    }
+  }
 }

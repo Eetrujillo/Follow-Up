@@ -1,5 +1,6 @@
-export class Notepad {
-  id!: number;
-  title!: string;
-  content?: string;
+export class NotepadDraft {
+  id!: string;
+  userId!: string;
+  contentHtml!: string;
+  lastModifiedAt!: Date;
 }

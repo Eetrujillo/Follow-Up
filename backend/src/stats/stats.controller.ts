@@ -1,14 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Controller, Get, Inject, Post } from '@nestjs/common';
 import { StatsService } from './stats.service';
-import { CreateStatDto } from './dto/create-stat.dto';
-import { UpdateStatDto } from './dto/update-stat.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PublicUser } from '../users/users.service';
 
 @Controller('stats')
 export class StatsController {
-  constructor(private readonly statsService: StatsService = new StatsService()) {}
-  @Post() create(@Body() body: CreateStatDto) { return this.statsService.create(body); }
-  @Get() findAll() { return this.statsService.findAll(); }
-  @Get(':id') findOne(@Param('id') id: string) { return this.statsService.findOne(+id); }
-  @Patch(':id') update(@Param('id') id: string, @Body() body: UpdateStatDto) { return this.statsService.update(+id, body); }
-  @Delete(':id') remove(@Param('id') id: string) { return this.statsService.remove(+id); }
+  constructor(@Inject(StatsService) private readonly statsService: StatsService) {}
+
+  @Get('streak')
+  getStreak(@CurrentUser() user: PublicUser) {
+    return this.statsService.getStreak(user.id);
+  }
+
+  @Post('visit')
+  registerVisit(@CurrentUser() user: PublicUser) {
+    return this.statsService.registerVisit(user.id);
+  }
 }

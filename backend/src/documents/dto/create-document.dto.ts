@@ -1,10 +1,20 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateDocumentDto {
+  @IsNotEmpty()
   @IsString()
+  folderId!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(200)
   title!: string;
 
   @IsOptional()
   @IsString()
-  content?: string;
+  contentHtml?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  fromNotepad?: boolean;
 }

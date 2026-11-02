@@ -1,10 +1,7 @@
 import { IsOptional, IsString } from 'class-validator';
 
-export class CreateNotepadDto {
-  @IsString()
-  title!: string;
-
+export class ListDocumentsQueryDto {
   @IsOptional()
   @IsString()
-  content?: string;
+  folderId?: string;
 }
