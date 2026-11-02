@@ -21,3 +21,7 @@ generated/
 .DS_Store
 .idea/
 *.swp
+
+# --- Respaldos locales de esquema ---
+*.backup
+*.backup2
