@@ -9,16 +9,7 @@ import { rethrowPrismaError } from '../prisma/prisma-error';
 export class CalendarService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  private async getDefaultUserId() {
-    const user = await this.prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
-    if (!user) {
-      throw new NotFoundException('No hay usuarios registrados');
-    }
-    return user.id;
-  }
-
-  async create(dto: CreateCalendarEventDto) {
-    const userId = await this.getDefaultUserId();
+  async create(userId: string, dto: CreateCalendarEventDto) {
     try {
       return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const dueDate = new Date(dto.year, dto.month - 1, dto.day);
@@ -54,8 +45,7 @@ export class CalendarService {
     }
   }
 
-  async findAll(month?: number, year?: number) {
-    const userId = await this.getDefaultUserId();
+  async findAll(userId: string, month?: number, year?: number) {
     try {
       return await this.prisma.calendarEvent.findMany({
         where: { userId },
@@ -69,8 +59,7 @@ export class CalendarService {
     }
   }
 
-  async remove(eventId: string) {
-    const userId = await this.getDefaultUserId();
+  async remove(userId: string, eventId: string) {
     const event = await this.prisma.calendarEvent.findFirst({
       where: { id: eventId, userId },
     });

@@ -9,16 +9,7 @@ import { rethrowPrismaError } from '../prisma/prisma-error';
 export class TasksService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  private async getDefaultUserId() {
-    const user = await this.prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
-    if (!user) {
-      throw new NotFoundException('No hay usuarios registrados');
-    }
-    return user.id;
-  }
-
-  async create(dto: CreateTaskDto) {
-    const userId = await this.getDefaultUserId();
+  async create(userId: string, dto: CreateTaskDto) {
     try {
       return await this.prisma.task.create({
         data: {
@@ -34,8 +25,7 @@ export class TasksService {
     }
   }
 
-  async findAll() {
-    const userId = await this.getDefaultUserId();
+  async findAll(userId: string) {
     try {
       return await this.prisma.task.findMany({
         where: { userId },
@@ -46,8 +36,7 @@ export class TasksService {
     }
   }
 
-  async update(taskId: string, dto: UpdateTaskDto) {
-    const userId = await this.getDefaultUserId();
+  async update(userId: string, taskId: string, dto: UpdateTaskDto) {
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, userId },
     });
@@ -70,8 +59,7 @@ export class TasksService {
     }
   }
 
-  async remove(taskId: string) {
-    const userId = await this.getDefaultUserId();
+  async remove(userId: string, taskId: string) {
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, userId },
     });

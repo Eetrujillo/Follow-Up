@@ -1,9 +1,10 @@
 {
   "scripts": {
     "build": "nest build",
-    "start": "tsx src/main.ts",
+    "start": "nest build && node dist/src/main.js",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
