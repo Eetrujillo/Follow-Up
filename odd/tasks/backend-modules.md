@@ -140,3 +140,13 @@ endpoints; rotating Railway secrets; force-pushing a remote history rewrite.
   commits). `origin/main..HEAD` is not the slice: it includes the pre-existing
   `feat/api-migration` work and the 35k generated-line deletions owned by
   `chore/repo-hygiene`.
+
+- L10 (delivery): pushed `feat/api-migration` (`d6c9206`) and `fix/backend-modules`
+  (`ff85a56`) to `origin`; pushed the frontend submodule `feat/api-migration`
+  (`f2954e6`) to `Eetrujillo/Follow_Up`. This environment has no `gh` binary and no
+  GitHub token, so the four stacked PRs remain one click each:
+  `main...chore/repo-hygiene`, `chore/repo-hygiene...feat/api-migration`,
+  `feat/api-migration...fix/backend-modules` (repo `Eetrujillo/Follow-Up`) and
+  `main...feat/api-migration` (repo `Eetrujillo/Follow_Up`).
+- L11 (slice): the review slice for this feature is `d6c9206..ff85a56`, four commits,
+  994 insertions / 104 deletions; `origin/main..HEAD` is never the slice.
