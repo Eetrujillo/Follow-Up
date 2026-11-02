@@ -1,1 +1,15 @@
-node_modules
+# --- Dependencias ---
+node_modules/
+
+# --- Secretos / entorno ---
+.env
+.env.*
+!.env.example
+
+# --- Builds / logs ---
+dist/
+build/
+*.log
+
+# --- Generado por Prisma ---
+generated/
