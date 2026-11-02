@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
+import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PublicUser } from '../users/users.service';
 
@@ -20,6 +21,15 @@ export class CalendarController {
     @Query('year') year?: number,
   ) {
     return this.calendarService.findAll(user.id, month, year);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: PublicUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateCalendarEventDto,
+  ) {
+    return this.calendarService.update(user.id, id, dto);
   }
 
   @Delete(':id')

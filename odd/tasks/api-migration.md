@@ -47,10 +47,10 @@ and was not part of the selected option): migrating `library`, `notepad` and
 | ID | Spec | Task | Route | Commit |
 |----|------|------|-------|--------|
 | T1 | S2 | Add `backend/test/auth.e2e.test.mjs` using `node --test`: anonymous `GET /tasks`, `GET /calendar`, `GET /users/:id` must be `401`; `GET /` and a bad `POST /auth/login` keep their current status; an invalid `POST /auth/register` must be `400`. Observe it fail first. | inline | |
-| T1b | S8 | Backend: run the app through a metadata-aware compiler (`nest start`) instead of `tsx`, after proving `node dist/src/main.js` validates and `tsx` does not. | inline | |
+| T1b | S8 | Backend: run the app through a metadata-aware compiler (`nest start`) instead of `tsx`, after proving `node dist/src/main.js` validates and `tsx` does not. | inline | `65a9261` |
 | T2 | S2 | Backend: `@Public()` decorator + `JwtAuthGuard` as `APP_GUARD` in `AppModule`; mark `GET /`, `auth/register`, `auth/login` public. | inline | |
-| T3 | S3 | Backend: `TasksService` and `CalendarService` take `userId` as a parameter; controllers pass the token user; delete `getDefaultUserId()`. | inline | |
-| T4 | S2,S3 | Backend: scope `UsersController`: `GET /users/:id` only for self; decide `POST /users` (duplicate of register). | inline | |
+| T3 | S3 | Backend: `TasksService` and `CalendarService` take `userId` as a parameter; controllers pass the token user; delete `getDefaultUserId()`. | inline | `65a9261` |
+| T4 | S2,S3 | Backend: scope `UsersController`: `GET /users/:id` only for self; decide `POST /users` (duplicate of register). | inline | `65a9261` |
 | T5 | S1,S7 | Frontend: `authInterceptor` attaching the Bearer token, registered in `app.config.ts`. | inline | |
 | T6 | S1,S4,S7 | Frontend: `Login`, `Signup` and `authGuard` use `AuthApiService`; guard resolves the session through `GET /auth/me`. | inline | |
 | T7 | S5 | Frontend: `TaskService` and calendar read/write through `TasksApiService` and `CalendarApiService`; remove localStorage persistence for them. | inline | |
@@ -80,3 +80,13 @@ and was not part of the selected option): migrating `library`, `notepad` and
   tables were created outside migrations.
 - L8 (finding): no backend test runner exists (`backend/package.json` has no `test`
   script). T1 uses Node's built-in `node --test`, so no dependency is added.
+- L9 (delivery): this branch is stacked. `feat/api-migration` sits on top of the pushed
+  `chore/repo-hygiene`, so the review slice for a PR here is only the commit added on
+  top of that base, never the 35k generated-line deletions that belong to the base
+  branch. Delivery is two chained PRs: `chore/repo-hygiene` -> `main`, then
+  `feat/api-migration` -> `chore/repo-hygiene`.
+- L10 (evidence): T1 red was observed on the running server (`/tasks` 200, `/calendar`
+  200, `/users/:id` 404, invalid register 500). T1b root cause was proven by running
+  the same code twice: `tsx src/main.ts` gave 500 with no validation, `node
+  dist/src/main.js` gave 400 with the six field errors. Green after T2-T4: 7/7 tests
+  pass on a fresh instance, `npm run build` exits 0.
