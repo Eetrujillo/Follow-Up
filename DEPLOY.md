@@ -103,7 +103,7 @@ issue the certificate:
 
 ```nginx
 server {
-    server_name follow-up.apolobyte.online;
+    server_name follow-up.eetrujillo.dev;
     location / {
         proxy_pass http://127.0.0.1:3202;
         proxy_set_header Host $host;
@@ -117,7 +117,7 @@ server {
 ```bash
 ln -s /etc/nginx/sites-available/follow-up /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
-certbot --nginx -d follow-up.apolobyte.online
+certbot --nginx -d follow-up.eetrujillo.dev
 ```
 
 On Cloudflare the record must be **DNS only** (grey cloud) while certbot
