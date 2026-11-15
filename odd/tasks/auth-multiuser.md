@@ -2,7 +2,7 @@
 
 Feature: multi-user authorization for Follow-Up. The audit (`docs/auditoria-app.md`) found that every business endpoint resolved a "default user" instead of the authenticated one.
 
-**Estado: implementado, probado y desplegado. Bloqueado solo el review nativo (RDD).**
+**Estado: implementado, probado, desplegado y con review nativo aprobado (RDD).**
 
 ## Specs
 
@@ -23,7 +23,7 @@ Feature: multi-user authorization for Follow-Up. The audit (`docs/auditoria-app.
 | T4 | Notepad sin HTML crudo + CSP (C2 mitigado) | S3 | ✅ | `97b0b10`, `1de5214` (submódulo) |
 | T5 | Informe con estado real | S2 | ✅ | incluido en cada commit |
 | T6 | Deploy y verificación en el VPS | S3 | ✅ | `prod = 3f6cf1e` |
-| T7 | Review nativo del candidato (RDD) | — | ⛔ bloqueado | — |
+| T7 | Review nativo del candidato (RDD) | — | ✅ aprobado | linaje `review-da56a9b1a00f716d` |
 
 ## Estado verificado del despliegue (2026-11-15)
 
@@ -51,25 +51,18 @@ cd backend && npm run test:e2e # 11 verdes; requiere docker
 - **Throttler por ruta**, no global: `/auth/me` es autenticado y no debe compartir el presupuesto anónimo. Límites validados al arrancar (`AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`); en tests suben a 50.
 - **Aislamiento de tests:** contenedor propio en 55432, nunca la base de desarrollo ni la de producción.
 
-## Bloqueo abierto: review nativo (RDD)
+## Resultado del review nativo (2026-11-15)
 
-Linaje **`review-da56a9b1a00f716d`**, estado `reviewing`, intacto. Candidato de un solo commit (`a6a3086`, 7 archivos, 373 líneas, tier high, presupuesto de corrección 187).
+Linaje `review-da56a9b1a00f716d`, candidato `a6a3086` (7 archivos, 373 líneas, tier high), lentes `review-risk` + `review-reliability`, dos corridas de revisor vía relay del host (`nan/glm5.3-flash`). Resultado: **approved**, acknowledge ejecutado, autoridad quemada. Sin correcciones ni hallazgos bloqueantes.
 
-- `baseRef` para el STATUS: `4daa180d0b91da48d4cb6586f930ae456569401e`
-- `target`: `sha256:6ebd0e1922d309557eedbab8373be51d2e978f608bf08c31f32de4490bb83123`
-- Lentes congeladas: `review-risk` + `review-reliability`. Pronóstico de 2 corridas **ya autorizado**.
+Hallazgos informativos (no bloquean, trabajo aparte):
 
-Dos bloqueos consecutivos, ninguno del código:
+- **R1-001** (risk, WARNING) — `backend/test/auth-isolation.e2e-spec.ts:45-46`: la suite e2e borra todas las filas de usuario de la base que apunte `DATABASE_URL`, sin confirmación. Si alguien la corre contra una base compartida o de staging destruye datos. Sugerencia: un guard de entorno que aborte salvo URL de test explícita.
+- **R1-002** (risk, WARNING) — `backend/src/calendar/calendar.service.ts:41`: el controlador sigue aceptando `month`/`year` y el servicio los descarta (`_month`/`_year`), así que el filtro se ignora silenciosamente. Preexistente en la base, no regresión de este candidato.
+- **R3-cal-params-1** (reliability, SUGGESTION) — `calendar.service.ts:44`: mismo punto; o filtrar de verdad o sacar los parámetros del contrato.
+- **R3-doc-count-1** (reliability, SUGGESTION) — `docs/auditoria-app.md:16`: la tabla de estado dice que la suite de aislamiento pasó "de 5 fallas a 7 verdes", pero la suite del candidato define 5 tests. El conteo del documento no es reproducible desde los artefactos.
 
-1. **`reviewer-config-invalid`** — el proveedor no encuentra modelo para la clave `review-risk`. No existe `models.json` en ninguna ruta candidata: `~/.gentle-shell/gentle-ai/`, `~/.gentle-shell/agent/gentle-ai/`, `~/.pi/gentle-ai/`. La doc del paquete (`docs/readme-reference.md:1107`) da el shape por agente: `{"review-risk": {"model": "proveedor/modelo", "thinking": "high"}}`. Configurarlo desde la pantalla de modelos y **Make default**, incluyendo las cuatro lentes (`review-risk`, `review-reliability`, `review-readability`, `review-resilience`).
-2. **`native-status-package-binary-missing`** (el bloqueo actual) — falta el binario `gentle-ai` dentro del paquete instalado. `GENTLE_PI_SKIP_GENTLE_AI_INSTALL` **no** está seteada; el script existe y nunca se ejecutó:
-
-```bash
-cd /home/trujillo/.local/share/mise/installs/node/26.13.0/lib/node_modules/gentle-pi
-node scripts/install-gentle-ai.mjs
-```
-
-Después: STATUS sobre el linaje y, si reofrece las dos bindings, la captura con `reviewerRunAcknowledged: true` (el pronóstico ya está pagado). Las bindings son opacas: **no transcribirlas a mano**, copiarlas del STATUS. Sin el binario no se puede saber si la config de modelos quedó bien.
+Los dos bloqueos previos quedaron resueltos: el binario `gentle-ai` ya estaba instalado en el paquete (`.gentle-ai/v4.5.0/`) y solo hacía falta `gentle-ai sync` (`managed_assets_outdated`); el routing de modelos se materializó desde `profiles.json` → `~/.gentle-shell/gentle-ai/models.json` (la clave `review-risk` ya estaba definida en el perfil `current`, pero el store global que la instalación en uso realmente lee no existía).
 
 ## Pendientes (del informe, no de esta feature)
 
@@ -97,3 +90,5 @@ Después: STATUS sobre el linaje y, si reofrece las dos bindings, la captura con
 **L6** (corrección): el informe marcaba C2 como crítico por XSS en el notepad. El único llamador de `insertHtmlAtCursor` pasaba markup constante y el pegado entra como nodo de texto, así que era riesgo latente, no vulnerabilidad activa. Bajó a alta; se eliminó el sink igual.
 
 **L7** (estado): implementación, tests y deploy completos y verificados. El review nativo no pudo correr por configuración del entorno (modelo de las lentes y binario del paquete), no por el candidato.
+
+**L8** (estado): review nativo aprobado sin correcciones. Los bloqueos eran de entorno: faltaba materializar `models.json` (routing ya definido en `profiles.json`) y correr `gentle-ai sync` tras la actualización de assets. Los 4 hallazgos son informativos; R1-001 (guard de base en la suite e2e) es el único con acción recomendada de código.
