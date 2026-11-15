@@ -19,3 +19,9 @@ process.env.FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:4200';
 // of trusting a hardcoded number. Production keeps the stricter default.
 process.env.AUTH_THROTTLE_LIMIT = process.env.AUTH_THROTTLE_LIMIT ?? '50';
 process.env.AUTH_THROTTLE_TTL_SECONDS = process.env.AUTH_THROTTLE_TTL_SECONDS ?? '60';
+
+// The per-client bucketing spec sends X-Forwarded-For headers and expects them
+// to be honored, which only happens for the default one-hop trust proxy. Pin it
+// so an ambient TRUST_PROXY_HOPS=0 cannot flip the test to per-socket
+// budgeting and fail for environment reasons instead of code reasons.
+process.env.TRUST_PROXY_HOPS = process.env.TRUST_PROXY_HOPS ?? '1';

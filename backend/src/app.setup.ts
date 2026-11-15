@@ -11,9 +11,12 @@ import { Express } from 'express';
  * the throttle entirely. Validated at boot like the other environment knobs.
  */
 export function trustProxyHops(): number {
-  const hops = Number((process.env.TRUST_PROXY_HOPS ?? '1').trim());
+  const raw = (process.env.TRUST_PROXY_HOPS ?? '1').trim();
+  const hops = Number(raw);
 
-  if (!Number.isInteger(hops) || hops < 0) {
+  // Number('') is 0, so an empty value would silently disable proxy trust and
+  // reactivate the shared-bucket throttle this setting exists to prevent.
+  if (raw === '' || !Number.isInteger(hops) || hops < 0) {
     throw new Error('TRUST_PROXY_HOPS debe ser un entero mayor o igual a 0');
   }
 
