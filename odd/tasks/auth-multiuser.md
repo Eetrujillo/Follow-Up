@@ -66,7 +66,7 @@ Los dos bloqueos previos quedaron resueltos: el binario `gentle-ai` ya estaba in
 
 ## Resultado del review nativo (2026-11-15, cadena completa)
 
-La rama completa excede el presupuesto de contexto del revisor (`lens_context_budget_exceeded`, terminal), así que se revisó como candidatos encadenados. Todos **approved**, acknowledge ejecutado, autoridad quemada, sin correcciones:
+La rama completa excede el presupuesto de contexto del revisor (`lens_context_budget_exceeded`, terminal), así que se revisó como candidatos encadenados. Todos **approved sin corrección obligatoria** (los hallazgos informativos no abrieron corrección y no reabren el review), acknowledge ejecutado y autoridad quemada; su disposición queda registrada debajo:
 
 | Candidato | Alcance | Linaje | Hallazgos informativos |
 |---|---|---|---|
@@ -75,12 +75,13 @@ La rama completa excede el presupuesto de contexto del revisor (`lens_context_bu
 | B credenciales | `41b3fcc` (registro cerrado + throttle, 214 líneas) | `review-b2f93ade032fd7ca` | 5 (2 accionables) |
 | C1 untrack generated | `dist/generated` (13 archivos, −415) | `review-2ee8d108ea76f831` | 1 — verificado sin importers |
 | C2 untrack src | `dist/src` (62 archivos, −1948) | `review-0a278b2ea4316aa0` | 0 |
+| D docs posterior | `7d17cba..ea7914f` (solo `odd/tasks/auth-multiuser.md`) | `review-13c85558d4eeaec9` | 2 — aplicados (ver L9/L10) |
 
 **Del candidato A** (aplicados): divulgar la IP/SSH del VPS en el doc committeado (corregido), contradicción L7/L8 sin marcador de supersedencia (corregido), estado de review que sobrepasaba su cobertura (corregido con L9).
 
-**Del candidato B** (2 accionables, pendientes):
-- **R1-proxy-bucket / R3-throttle-ip-key**: el `ThrottlerGuard` presupuesta por `req.ip`; detrás de nginx sin `trust proxy` configurado en Express, todos los clientes comparten un único presupuesto de 5 intentos/60s y un atacante puede 429ear logins legítimos. **El deploy real está detrás de nginx del host → aplica en producción.** Fix: configurar `trust proxy` (o tracker por header) + test.
-- **R3-e2e-shared-db**: las suites e2e comparten base y vitest corre archivos en paralelo; `public-endpoints` (espera 0 usuarios) compite con `auth-throttle` (registra uno). Flaky. Fix: ejecución serial (`--pool=forks --no-file-parallelism`) o bases separadas.
+**Del candidato B** (2 accionables, resueltos):
+- **R1-proxy-bucket / R3-throttle-ip-key** → **H9, corregido**: el `ThrottlerGuard` presupuesta por `req.ip`; detrás de nginx sin `trust proxy` todos los clientes compartían un único presupuesto. Fix: `trustProxyHops()` en `app.setup.ts` (`TRUST_PROXY_HOPS`, validado al arranque, default 1 = el nginx del host; 0 desactiva) y test e2e RED→GREEN que prueba presupuesto por cliente vía `X-Forwarded-For`.
+- **R3-e2e-shared-db** → **H10, no era un defecto**: `vitest.config.ts` ya corría con `fileParallelism: false` desde `d2411f0` (T1); la config simplemente no estaba en los paths del candidato B. `git log -S` lo confirma.
 - R3-memory-store: storage en memoria del throttler — presupuesto por proceso, no por deployment; documentar o compartir storage si se escala horizontal.
 - R1-throttle-env-failfast: positivo — validación al arranque de `AUTH_THROTTLE_*`.
 
@@ -88,13 +89,13 @@ La rama completa excede el presupuesto de contexto del revisor (`lens_context_bu
 
 Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month`/`year` ignorados, R3-doc-count-1 conteo no reproducible) siguen abiertos como trabajo aparte.
 
+**L10** (estado): review `review-13c85558d4eeaec9` aprobado sobre los commits de docs posteriores; sus 2 hallazgos informativos de redacción se aplicaron ("sin correcciones" precisado a "sin corrección obligatoria", y L9 reescrito para describir el mapeo candidato→linaje real). En el mismo ciclo se corrigió H9 (trust proxy + test RED→GREEN, 12 tests verdes) y se verificó que H10 no era un defecto (`fileParallelism: false` desde `d2411f0`).
+
 ## Pendientes (del informe, no de esta feature)
 
 | ID | Qué | Nota |
 |---|---|---|
 | H8 | Suite del SPA rota: 11 de 14 archivos en rojo | `AuthService.getCurrentUser` usa `localStorage` antes de que el entorno de test lo tenga |
-| H9 | Throttle por IP sin `trust proxy` tras nginx: presupuesto compartido entre todos los clientes | Del review B (`R1-proxy-bucket`); configurar `trust proxy` en `app.setup.ts` + test |
-| H10 | Suites e2e compiten por la base compartida bajo vitest paralelo | Del review B (`R3-e2e-shared-db`); serializar archivos o separar bases |
 | — | SSH del VPS: `PasswordAuthentication` sigue habilitado, sin fail2ban | Hay fuerza bruta activa contra el 22; requiere autorización sobre el VPS |
 | — | Rotar la contraseña de root compartida por chat | Quedó en el historial de la sesión |
 | — | Autor del commit `63e009c` del frontend | `trujillo <trujillo@local>`; el policy del harness rechaza `--force-with-lease` |
@@ -119,4 +120,4 @@ Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month
 
 **L8** (estado): review nativo aprobado sin correcciones. Los bloqueos eran de entorno: faltaba materializar `models.json` (routing ya definido en `profiles.json`) y correr `gentle-ai sync` tras la actualización de assets. Los 4 hallazgos son informativos; R1-001 (guard de base en la suite e2e) es el único con acción recomendada de código.
 
-**L9** (estado): el linaje `review-da56a9b1a00f716d` aprobó solo el candidato `a6a3086` (T2). El resto de la rama se revisa como candidatos encadenados por el presupuesto de contexto del revisor: A deploy+docs (linaje `review-8e332370d2c8e9d2`, aprobado, con 3 hallazgos informativos — se corrigió la divulgación de la IP del VPS en este documento), B commit `41b3fcc` partido en 2, C borrado de `dist` en `0f4b9f2`. El estado del encabezado refleja cada uno al cerrarse.
+**L9** (estado, corregido por el review `review-13c85558d4eeaec9`): el linaje `review-da56a9b1a00f716d` aprobó solo el candidato `a6a3086` (T2). El resto de la rama se revisa como candidatos encadenados por el presupuesto de contexto del revisor: A deploy+docs (linaje `review-8e332370d2c8e9d2`, aprobado, con 3 hallazgos informativos — se corrigió la divulgación de la IP del VPS en este documento), B commit `41b3fcc` como un único candidato reducido (el START congela el HEAD del worktree y difiere contra el `baseRef`; los commits de split fueron solo andamiaje), y C borrado de `dist` en `0f4b9f2` partido en dos mitades (`dist/generated` y `dist/src`). El estado del encabezado refleja cada uno al cerrarse.
