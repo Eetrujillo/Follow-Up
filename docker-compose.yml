@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: followup-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-followup}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required, create a .env first}
+      POSTGRES_DB: ${POSTGRES_DB:-followup}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # The backend runs `prisma migrate deploy` on start, so it must not begin
+      # before Postgres accepts connections.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-followup} -d ${POSTGRES_DB:-followup}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    networks:
+      - followup-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: followup-backend
+    restart: unless-stopped
+    environment:
+      # Built from the same variables as the postgres service on purpose: one
+      # source of truth for the credentials, no chance of a half-updated pair.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-followup}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-followup}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required, create a .env first}
+      # Must be a positive integer in SECONDS: auth.config.ts rejects anything else.
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-86400}
+      PORT: 3000
+      # Same origin in practice (nginx proxies /api), so CORS is not exercised;
+      # it stays configured for direct API calls from a browser.
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3202}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Not published: only nginx reaches it, over the compose network.
+    networks:
+      - followup-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: followup-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    # Published on every interface because the VPS has no domain or TLS yet and
+    # the site is reached as http://<ip>:3202. ufw does NOT protect this port:
+    # Docker writes its DNAT rules before the INPUT chain, so a published port is
+    # reachable even with ufw denying it. To go back to loopback-only behind a
+    # host reverse proxy, prefix the value with 127.0.0.1: (see DEPLOY.md).
+    ports:
+      - "${FRONTEND_PORT:-3202}:3202"
+    networks:
+      - followup-net
+
+networks:
+  followup-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
