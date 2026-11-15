@@ -109,10 +109,11 @@ El crítico es uno solo y es el que importaba: **no había autorización por usu
 `backend/dist/` está en el repositorio (`git ls-files backend/dist` lista los `.js` emitidos). Cualquier `npm run build` ensucia el árbol de trabajo con artefactos derivados, y un `dist` viejo puede terminar servido si alguien ejecuta `node dist/src/main.js` sin recompilar. El `.gitignore` lo ignora para archivos nuevos, pero los ya rastreados siguen versionados.
 **Arreglo:** `git rm -r --cached backend/dist` y commitear la eliminación; el contenedor ya compila desde el código fuente.
 
-### H8 — La suite de tests del SPA está rota
+### H8 — La suite de tests del SPA está rota — ✅ CORREGIDO (2026-11-15)
 
-De los 14 archivos de test del SPA, **11 fallan** en el código actual (15 de 19 tests), con `Cannot read properties of undefined (reading 'getItem')`: `AuthService.getCurrentUser` corre antes de que el entorno de test tenga `localStorage`. No es el fallo de un test aislado, es el arnés: la suite da falsa sensación de cobertura porque nadie la mira en rojo.
-**Arreglo:** inicializar `localStorage` en el `setupFiles` del builder de tests, o mover el acceso detrás de `TokenStorage`, que ya existe, para poder inyectarlo. Después, exigir la suite verde antes de tocar el SPA.
+De los 14 archivos de test del SPA, **12 fallaban** en el código actual (16 de 19 tests). La causa raíz era doble y ninguna era `AuthService`: (1) Node 26 expone `localStorage` como global experimental que es `undefined` sin `--localstorage-file`, y el entorno jsdom de vitest no puede pisar ese key ya definido; (2) los specs de App, Sidebar, Login y Signup construían componentes standalone sin router, con `NG0201` en `RouterLink`/`ActivatedRoute`.
+
+**Arreglo aplicado (frontend `ef378ae`):** el script `test` corre con `NODE_OPTIONS=--localstorage-file` apuntando a un archivo gitignoreado (con sus `-shm`/`-wal`); cada spec sin router provee `provideRouter([])`; la aserción boilerplate del App spec (buscaba un `h1` que nunca existió) se reemplazó por la conducta real del layout por defecto. Suite: **14 archivos / 19 tests en verde**, verificado en corridas consecutivas. La recomendación de exigir la suite verde antes de tocar el SPA queda como proceso.
 
 ---
 

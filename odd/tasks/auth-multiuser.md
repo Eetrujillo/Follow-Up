@@ -97,11 +97,13 @@ Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month
 
 **L11** (estado): review `review-1bcc732dc2aa3f1c` aprobó el fix de H9 con 6 hallazgos informativos. Los 3 accionables se corrigieron (`TRUST_PROXY_HOPS=""` ya no se coacciona a 0 y lo prueba `trust-proxy.unit.spec.ts` RED→GREEN; `setup-env.ts` fija la variable; la validación tiene test directo) y el candidato de seguimiento `review-57cc0f56197b9bd5` cerró **sin hallazgos**. Suite completa: 16 tests verdes en 5 archivos.
 
+**L12** (estado): H8 corregido (frontend `ef378ae`, fast-forward en `feat/api-migration`). Causa real: Node 26 expone `localStorage` experimental indefinido sin `--localstorage-file` y vitest/jsdom no puede pisarlo; más 4 specs sin router. 14 archivos / 19 tests verdes en corridas consecutivas. Detalle en `docs/auditoria-app.md`.
+
 ## Pendientes (del informe, no de esta feature)
 
 | ID | Qué | Nota |
 |---|---|---|
-| H8 | Suite del SPA rota: 11 de 14 archivos en rojo | `AuthService.getCurrentUser` usa `localStorage` antes de que el entorno de test lo tenga |
+| H8 | ✅ corregido — Suite del SPA restaurada (14 archivos / 19 tests verdes) | Node 26 + `localStorage` experimental (fix: `NODE_OPTIONS=--localstorage-file` en el script) + 4 specs sin router (`provideRouter([])`); frontend `ef378ae` |
 | — | SSH del VPS: `PasswordAuthentication` sigue habilitado, sin fail2ban | Hay fuerza bruta activa contra el 22; requiere autorización sobre el VPS |
 | — | Rotar la contraseña de root compartida por chat | Quedó en el historial de la sesión |
 | — | Autor del commit `63e009c` del frontend | `trujillo <trujillo@local>`; el policy del harness rechaza `--force-with-lease` |
