@@ -14,7 +14,7 @@ Se actualiza a medida que cada hallazgo se interviene. Un hallazgo pasa a ✅ so
 | Hallazgo | Estado | Evidencia |
 |---|---|---|
 | C1 — sin autorización por usuario | ✅ Corregido | T2: e2e `auth-isolation` pasó de 5 fallas a 7 verdes (401 sin token, listados cruzados, PATCH y DELETE ajenos → 404) |
-| C2 — JWT en localStorage + XSS | ⏳ En curso | T4 |
+| C2 — JWT en localStorage + sink de HTML | ⚠️ Mitigado (queda la cookie HttpOnly) | T4: fuera el último `innerHTML` del SPA (`97b0b10`); CSP `script-src 'self'` verificada con `curl -I` sobre el nginx real |
 | H1 — registro abierto sin límite | ✅ Corregido | T3: `POST /api/users` devolvía **201 Created** sin token; ahora 404. Login y registro throttleados (429 verificado) |
 | H2 — PII enumerable por id | ✅ Corregido | T3: `GET /api/users/:id` eliminado; el perfil se lee en `GET /auth/me` con token |
 | H4 — backend sin tests | ✅ Corregido | T1: arnés e2e con vitest + SWC y base descartable |
@@ -28,12 +28,12 @@ Se actualiza a medida que cada hallazgo se interviene. Un hallazgo pasa a ✅ so
 
 | Severidad | Cantidad | Tema dominante |
 |---|---|---|
-| Crítica | 2 | Autorización inexistente; JWT en `localStorage` con XSS disponible |
-| Alta | 6 | Registro abierto, sin rate limit, cero tests de backend, PII enumerable |
-| Media | 8 | Módulos muertos, filtros ignorados, fechas sin validar, errores silenciados |
+| Crítica | 1 | Autorización inexistente |
+| Alta | 7 | JWT en `localStorage`, registro y perfil abiertos, cero tests, módulos muertos, `dist` versionado |
+| Media | 8 | Filtros ignorados, fechas en zona del servidor, errores silenciados, budgets de build |
 | Baja | 8 | Ruido de desarrollo, mapeo de errores incompleto, deps dudosas |
 
-Los dos críticos se combinan en la misma cadena de ataque: **no hay autorización por usuario, y el token que sí existe se guarda donde un XSS lo puede leer.** Hoy la base está vacía, así que no hay dato real que perder; eso es suerte, no diseño.
+El crítico es uno solo y es el que importaba: **no había autorización por usuario**. Lo que parecía una cadena de ataque (autorización ausente + XSS activo) resultó, al leer el código con cuidado, en un riesgo latente: el token está donde un XSS lo leería, pero hoy no hay una vía para inyectar ese script. Ver la corrección en C2.
 
 ---
 
@@ -57,16 +57,17 @@ Los dos críticos se combinan en la misma cadena de ataque: **no hay autorizaci�
 
 **Dirección de arreglo.** Inyectar el usuario desde el request autenticado (`@Req()` con `JwtStrategy`, que ya devuelve el `PublicUser`) en cada servicio firmado con el `userId` del token, y poner `@UseGuards(JwtAuthGuard)` a nivel de controller. Borrar `getDefaultUserId()` de ambos servicios y del proyecto. Antes de escribir código, decidir el punto 1 de la sección 4.
 
-### C2 — El JWT vive en `localStorage` y la app tiene vectores de XSS
+### C2 — El JWT vive en `localStorage` (severidad alta, no crítica)
 
 **Evidencia**
 - `frontend/src/app/shared/services/token-storage.ts:8-10`: `localStorage.getItem/setItem('backend_access_token')`.
-- `frontend/src/app/pages/notepad/notepad.ts:99`: `const rawHtml = this.editorRef.nativeElement.innerHTML;`
-- `frontend/src/app/pages/notepad/notepad.ts:162`: `temp.innerHTML = html;`
+- `frontend/src/app/pages/notepad/notepad.ts:99` leía `innerHTML` para pasarlo a texto plano (sin riesgo: leer no ejecuta).
 
-**Impacto.** Cualquier script inyectado lee el token y lo exfiltra; con ese token se toman las acciones del usuario. La nota del notepad se procesa como HTML crudo, y una nota con contenido malicioso (pegado desde afuera) es el vector natural. `localStorage` no está protegido por `HttpOnly`, así que no hay defensa en profundidad: XSS equivale a robo de sesión.
+**Impacto.** El token está donde cualquier script ejecutado en la página puede leerlo, y `localStorage` no recibe la protección `HttpOnly`. Con el token se actúa como el usuario.
 
-**Dirección de arreglo.** A corto plazo, sanear con `DomSanitizer` toda manipulación de HTML del notepad y evitar `innerHTML` sobre contenido que viene de datos. A mediano plazo, mover la sesión a cookie `HttpOnly` + `SameSite`, que obliga a tocar el backend (hoy devuelve `access_token` en el body). Lo que **no** sirve es seguir en `localStorage` y confiar en que no habrá XSS.
+**Corrección de este informe.** La primera versión marcaba esto como crítico afirmando que había XSS disponible en el notepad por `temp.innerHTML = html` y `insertAdjacentHTML`. Al rastrear los llamadores, el único era `insertHtmlAtCursor('<br><br>')`: markup constante escrito en el componente. El pegando de portapapeles se intercepta y entra como nodo de texto. **No existía una vía para que contenido del usuario llegara al parser**, así que el hallazgo es un riesgo latente, no una vulnerabilidad activa: la severidad baja a alta.
+
+**Dirección de arreglo (hecho y pendiente).** Hecho: el sink de HTML del notepad se reemplazó por inserción de nodos, así que ya no queda ningún `innerHTML` en el SPA; y `nginx.conf` ahora emite una CSP con `script-src 'self'`, que impide ejecutar un script inyectado. Pendiente y con decisión de producto: mover la sesión a cookie `HttpOnly` + `SameSite`, lo que obliga a tocar el backend (hoy devuelve `access_token` en el body y el SPA lo guarda).
 
 ---
 
@@ -107,6 +108,11 @@ Los dos críticos se combinan en la misma cadena de ataque: **no hay autorizaci�
 
 `backend/dist/` está en el repositorio (`git ls-files backend/dist` lista los `.js` emitidos). Cualquier `npm run build` ensucia el árbol de trabajo con artefactos derivados, y un `dist` viejo puede terminar servido si alguien ejecuta `node dist/src/main.js` sin recompilar. El `.gitignore` lo ignora para archivos nuevos, pero los ya rastreados siguen versionados.
 **Arreglo:** `git rm -r --cached backend/dist` y commitear la eliminación; el contenedor ya compila desde el código fuente.
+
+### H8 — La suite de tests del SPA está rota
+
+De los 14 archivos de test del SPA, **11 fallan** en el código actual (15 de 19 tests), con `Cannot read properties of undefined (reading 'getItem')`: `AuthService.getCurrentUser` corre antes de que el entorno de test tenga `localStorage`. No es el fallo de un test aislado, es el arnés: la suite da falsa sensación de cobertura porque nadie la mira en rojo.
+**Arreglo:** inicializar `localStorage` en el `setupFiles` del builder de tests, o mover el acceso detrás de `TokenStorage`, que ya existe, para poder inyectarlo. Después, exigir la suite verde antes de tocar el SPA.
 
 ---
 
