@@ -2,7 +2,7 @@
 
 Feature: multi-user authorization for Follow-Up. The audit (`docs/auditoria-app.md`) found that every business endpoint resolved a "default user" instead of the authenticated one.
 
-**Estado: implementado, probado y desplegado. Review nativo: T2 aprobado (`review-da56a9b1a00f716d`), A deploy+docs aprobado (`review-8e332370d2c8e9d2`); B (`41b3fcc`) y C (`0f4b9f2`) en revisión por presupuesto de contexto (candidatos encadenados).**
+**Estado: implementado, probado y desplegado. Review nativo (RDD): T2, A deploy+docs, B credenciales y C untrack de dist — todos aprobados y acknowledgeados.**
 
 ## Specs
 
@@ -64,11 +64,37 @@ Hallazgos informativos (no bloquean, trabajo aparte):
 
 Los dos bloqueos previos quedaron resueltos: el binario `gentle-ai` ya estaba instalado en el paquete (`.gentle-ai/v4.5.0/`) y solo hacía falta `gentle-ai sync` (`managed_assets_outdated`); el routing de modelos se materializó desde `profiles.json` → `~/.gentle-shell/gentle-ai/models.json` (la clave `review-risk` ya estaba definida en el perfil `current`, pero el store global que la instalación en uso realmente lee no existía).
 
+## Resultado del review nativo (2026-11-15, cadena completa)
+
+La rama completa excede el presupuesto de contexto del revisor (`lens_context_budget_exceeded`, terminal), así que se revisó como candidatos encadenados. Todos **approved**, acknowledge ejecutado, autoridad quemada, sin correcciones:
+
+| Candidato | Alcance | Linaje | Hallazgos informativos |
+|---|---|---|---|
+| T2 `a6a3086` | Aislamiento multiusuario | `review-da56a9b1a00f716d` | 4 (ver abajo) |
+| A deploy+docs | `0f4b9f2..HEAD` (compose, workflow, auditoría, docs) | `review-8e332370d2c8e9d2` | 3 — aplicados en `391b69b` |
+| B credenciales | `41b3fcc` (registro cerrado + throttle, 214 líneas) | `review-b2f93ade032fd7ca` | 5 (2 accionables) |
+| C1 untrack generated | `dist/generated` (13 archivos, −415) | `review-2ee8d108ea76f831` | 1 — verificado sin importers |
+| C2 untrack src | `dist/src` (62 archivos, −1948) | `review-0a278b2ea4316aa0` | 0 |
+
+**Del candidato A** (aplicados): divulgar la IP/SSH del VPS en el doc committeado (corregido), contradicción L7/L8 sin marcador de supersedencia (corregido), estado de review que sobrepasaba su cobertura (corregido con L9).
+
+**Del candidato B** (2 accionables, pendientes):
+- **R1-proxy-bucket / R3-throttle-ip-key**: el `ThrottlerGuard` presupuesta por `req.ip`; detrás de nginx sin `trust proxy` configurado en Express, todos los clientes comparten un único presupuesto de 5 intentos/60s y un atacante puede 429ear logins legítimos. **El deploy real está detrás de nginx del host → aplica en producción.** Fix: configurar `trust proxy` (o tracker por header) + test.
+- **R3-e2e-shared-db**: las suites e2e comparten base y vitest corre archivos en paralelo; `public-endpoints` (espera 0 usuarios) compite con `auth-throttle` (registra uno). Flaky. Fix: ejecución serial (`--pool=forks --no-file-parallelism`) o bases separadas.
+- R3-memory-store: storage en memoria del throttler — presupuesto por proceso, no por deployment; documentar o compartir storage si se escala horizontal.
+- R1-throttle-env-failfast: positivo — validación al arranque de `AUTH_THROTTLE_*`.
+
+**Del candidato C1**: no había prueba de que nada importara de `backend/dist/generated/prisma`. Verificado: `grep` sobre `backend/src`, tests, Dockerfile y `package.json` no encuentra importers; `prisma generate` corre en el build del Dockerfile y el cliente vive en `node_modules`. Eran una copia obsoleta.
+
+Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month`/`year` ignorados, R3-doc-count-1 conteo no reproducible) siguen abiertos como trabajo aparte.
+
 ## Pendientes (del informe, no de esta feature)
 
 | ID | Qué | Nota |
 |---|---|---|
 | H8 | Suite del SPA rota: 11 de 14 archivos en rojo | `AuthService.getCurrentUser` usa `localStorage` antes de que el entorno de test lo tenga |
+| H9 | Throttle por IP sin `trust proxy` tras nginx: presupuesto compartido entre todos los clientes | Del review B (`R1-proxy-bucket`); configurar `trust proxy` en `app.setup.ts` + test |
+| H10 | Suites e2e compiten por la base compartida bajo vitest paralelo | Del review B (`R3-e2e-shared-db`); serializar archivos o separar bases |
 | — | SSH del VPS: `PasswordAuthentication` sigue habilitado, sin fail2ban | Hay fuerza bruta activa contra el 22; requiere autorización sobre el VPS |
 | — | Rotar la contraseña de root compartida por chat | Quedó en el historial de la sesión |
 | — | Autor del commit `63e009c` del frontend | `trujillo <trujillo@local>`; el policy del harness rechaza `--force-with-lease` |
