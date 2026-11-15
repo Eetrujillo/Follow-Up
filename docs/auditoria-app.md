@@ -113,7 +113,7 @@ El crítico es uno solo y es el que importaba: **no había autorización por usu
 
 De los 14 archivos de test del SPA, **12 fallaban** en el código actual (16 de 19 tests). La causa raíz era doble y ninguna era `AuthService`: (1) Node 26 expone `localStorage` como global experimental que es `undefined` sin `--localstorage-file`, y el entorno jsdom de vitest no puede pisar ese key ya definido; (2) los specs de App, Sidebar, Login y Signup construían componentes standalone sin router, con `NG0201` en `RouterLink`/`ActivatedRoute`.
 
-**Arreglo aplicado (frontend `ef378ae`):** el script `test` corre con `NODE_OPTIONS=--localstorage-file` apuntando a un archivo gitignoreado (con sus `-shm`/`-wal`); cada spec sin router provee `provideRouter([])`; la aserción boilerplate del App spec (buscaba un `h1` que nunca existió) se reemplazó por la conducta real del layout por defecto. Suite: **14 archivos / 19 tests en verde**, verificado en corridas consecutivas. La recomendación de exigir la suite verde antes de tocar el SPA queda como proceso.
+**Arreglo aplicado (frontend `ef378ae` + `6703aed`):** el script `test` corre con `NODE_OPTIONS=--localstorage-file` apuntando a un archivo **por corrida** (`${TMPDIR:-/tmp}/ng-test-localstorage-$$`) — cada corrida arranca sin estado arrastrado, cosa que importa porque `TokenStorage` escribe en `localStorage` y ningún spec lo limpia globalmente; cada spec sin router provee `provideRouter([])`; la aserción boilerplate del App spec (buscaba un `h1` que nunca existió) se reemplazó por la conducta real del layout por defecto. Suite: **14 archivos / 19 tests en verde**, verificado en corridas consecutivas. La recomendación de exigir la suite verde antes de tocar el SPA queda como proceso.
 
 ---
 

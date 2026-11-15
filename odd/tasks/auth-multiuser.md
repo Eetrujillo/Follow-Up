@@ -77,6 +77,7 @@ La rama completa excede el presupuesto de contexto del revisor (`lens_context_bu
 | C2 untrack src | `dist/src` (62 archivos, −1948) | `review-0a278b2ea4316aa0` | 0 |
 | D docs posterior | `7d17cba..ea7914f` (solo `odd/tasks/auth-multiuser.md`) | `review-13c85558d4eeaec9` | 2 — aplicados (ver L9/L10) |
 | E H9 trust proxy | `ea7914f..8c56ef4` (app.setup, test e2e, env.sample, docs) | `review-1bcc732dc2aa3f1c` | 6 — 3 aplicados (ver L11) |
+| G H8 suite SPA | `bc24b66..24fa89c` (docs + gitlink del submódulo; fix real en frontend `ef378ae`+`6703aed`) | `review-5d91369e13d49899` | 2 — determinismo corregido (localStorage por corrida) |
 | F follow-up H9 | `8c56ef4..bc24b66` (validación, unit spec, pin e2e, docs) | `review-57cc0f56197b9bd5` | 0 |
 
 **Del candidato A** (aplicados): divulgar la IP/SSH del VPS en el doc committeado (corregido), contradicción L7/L8 sin marcador de supersedencia (corregido), estado de review que sobrepasaba su cobertura (corregido con L9).
@@ -98,6 +99,10 @@ Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month
 **L11** (estado): review `review-1bcc732dc2aa3f1c` aprobó el fix de H9 con 6 hallazgos informativos. Los 3 accionables se corrigieron (`TRUST_PROXY_HOPS=""` ya no se coacciona a 0 y lo prueba `trust-proxy.unit.spec.ts` RED→GREEN; `setup-env.ts` fija la variable; la validación tiene test directo) y el candidato de seguimiento `review-57cc0f56197b9bd5` cerró **sin hallazgos**. Suite completa: 16 tests verdes en 5 archivos.
 
 **L12** (estado): H8 corregido (frontend `ef378ae`, fast-forward en `feat/api-migration`). Causa real: Node 26 expone `localStorage` experimental indefinido sin `--localstorage-file` y vitest/jsdom no puede pisarlo; más 4 specs sin router. 14 archivos / 19 tests verdes en corridas consecutivas. Detalle en `docs/auditoria-app.md`.
+
+
+
+**L13** (estado): H8 corregido y revisado (`review-5d91369e13d49899`, aprobado). Causa real: Node 26 expone `localStorage` experimental indefinido sin `--localstorage-file` y vitest/jsdom no puede pisarlo; más 4 specs sin router. Suite: 14 archivos / 19 tests verdes en corridas consecutivas. El hallazgo de determinismo se corrigió en `6703aed`: archivo de localStorage por corrida. El hallazgo de cobertura es estructural del submódulo: el fix vive en `ef378ae`/`6703aed` del repo frontend y el candidato del padre solo mueve el gitlink.
 
 ## Pendientes (del informe, no de esta feature)
 
