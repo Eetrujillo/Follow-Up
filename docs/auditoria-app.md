@@ -7,6 +7,20 @@
 
 Este documento **no modifica código**. Es un inventario de fallas con evidencia y dirección de arreglo.
 
+## 0. Estado de los arreglos
+
+Se actualiza a medida que cada hallazgo se interviene. Un hallazgo pasa a ✅ solo cuando hay un test que fallaba antes del cambio y pasa después.
+
+| Hallazgo | Estado | Evidencia |
+|---|---|---|
+| C1 — sin autorización por usuario | ✅ Corregido | T2: e2e `auth-isolation` pasó de 5 fallas a 7 verdes (401 sin token, listados cruzados, PATCH y DELETE ajenos → 404) |
+| C2 — JWT en localStorage + XSS | ⏳ En curso | T4 |
+| H1 — registro abierto sin límite | ⏳ En curso | T3 |
+| H2 — PII enumerable por id | ⏳ En curso | T3 |
+| H4 — backend sin tests | ✅ Corregido | T1: arnés e2e con vitest + SWC y base descartable |
+| M1 — fechas del calendario | ⚠️ Parcial: el DTO **sí** valida `@Min`/`@Max`; solo queda la zona horaria | Corregido en el texto de la sección 4 |
+| resto | Pendiente | — |
+
 ---
 
 ## 1. Resumen ejecutivo
@@ -93,7 +107,7 @@ Los dos críticos se combinan en la misma cadena de ataque: **no hay autorizaci�
 
 | ID | Evidencia | Problema | Dirección |
 |---|---|---|---|
-| M1 | `calendar.service.ts:26` | `new Date(year, month-1, day)` sin validar rangos: `month: 13` produce enero del año siguiente en silencio; la hora queda en la zona del servidor, no del usuario | `@IsInt() @Min(1) @Max(12)` en el DTO y construir la fecha en UTC |
+| M1 | `calendar.service.ts:26` | `new Date(year, month-1, day)` construye la fecha en la zona horaria del **servidor**, no del usuario: un evento del día 15 puede verse el 14 en otro huso. (El DTO sí acota `month` 1-12 y `day` 1-31, así que el desborde silencioso no es alcanzable por HTTP) | Construir la fecha en UTC (`Date.UTC`) o guardar fecha + zona explícita |
 | M2 | `calendar.service.ts:80-83` | Al borrar un evento, el borrado de la tarea encadenada va con `.catch(() => null)`: cualquier falla se traga y queda una tarea huérfana | No silenciar: o transacción completa o error explícito |
 | M3 | `tasks.service.ts:11-17`, `calendar.service.ts:11-17` | `getDefaultUserId()` duplicado literal en dos servicios | Extraer a un servicio o eliminarlo con C1 |
 | M4 | `tasks.controller.ts:19,24`, `calendar.controller.ts:20` | Sin `ParseUUIDPipe`: un id inválido llega a Prisma y devuelve 500 en vez de 400 | `ParseUUIDPipe` como ya se usa en `users.controller.ts:15` |

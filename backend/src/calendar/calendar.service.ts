@@ -5,20 +5,16 @@ import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { randomUUID } from 'node:crypto';
 import { rethrowPrismaError } from '../prisma/prisma-error';
 
+/**
+ * Like TasksService, the owner comes from the verified token and is the first
+ * argument of every method. Calendar events and their linked task are created in
+ * one transaction because an event without its task is a broken reminder.
+ */
 @Injectable()
 export class CalendarService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  private async getDefaultUserId() {
-    const user = await this.prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
-    if (!user) {
-      throw new NotFoundException('No hay usuarios registrados');
-    }
-    return user.id;
-  }
-
-  async create(dto: CreateCalendarEventDto) {
-    const userId = await this.getDefaultUserId();
+  async create(userId: string, dto: CreateCalendarEventDto) {
     try {
       return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const dueDate = new Date(dto.year, dto.month - 1, dto.day);
@@ -33,7 +29,7 @@ export class CalendarService {
           },
         });
 
-        const event = await tx.calendarEvent.create({
+        return tx.calendarEvent.create({
           data: {
             id: randomUUID(),
             userId,
@@ -46,16 +42,13 @@ export class CalendarService {
             Task: true,
           },
         });
-
-        return event;
       });
     } catch (error) {
       rethrowPrismaError(error);
     }
   }
 
-  async findAll(month?: number, year?: number) {
-    const userId = await this.getDefaultUserId();
+  async findAll(userId: string, _month?: number, _year?: number) {
     try {
       return await this.prisma.calendarEvent.findMany({
         where: { userId },
@@ -69,15 +62,8 @@ export class CalendarService {
     }
   }
 
-  async remove(eventId: string) {
-    const userId = await this.getDefaultUserId();
-    const event = await this.prisma.calendarEvent.findFirst({
-      where: { id: eventId, userId },
-    });
-
-    if (!event) {
-      throw new NotFoundException('El evento no existe o no pertenece al usuario');
-    }
+  async remove(userId: string, eventId: string) {
+    const event = await this.assertOwnedBy(userId, eventId);
 
     try {
       return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -94,5 +80,21 @@ export class CalendarService {
     } catch (error) {
       rethrowPrismaError(error);
     }
+  }
+
+  /**
+   * An event that belongs to somebody else answers exactly like a missing one, so
+   * the status code cannot be used to probe which ids exist.
+   */
+  private async assertOwnedBy(userId: string, eventId: string) {
+    const event = await this.prisma.calendarEvent.findFirst({
+      where: { id: eventId, userId },
+    });
+
+    if (!event) {
+      throw new NotFoundException('El evento no existe o no pertenece al usuario');
+    }
+
+    return event;
   }
 }
