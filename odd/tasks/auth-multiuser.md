@@ -76,6 +76,8 @@ La rama completa excede el presupuesto de contexto del revisor (`lens_context_bu
 | C1 untrack generated | `dist/generated` (13 archivos, −415) | `review-2ee8d108ea76f831` | 1 — verificado sin importers |
 | C2 untrack src | `dist/src` (62 archivos, −1948) | `review-0a278b2ea4316aa0` | 0 |
 | D docs posterior | `7d17cba..ea7914f` (solo `odd/tasks/auth-multiuser.md`) | `review-13c85558d4eeaec9` | 2 — aplicados (ver L9/L10) |
+| E H9 trust proxy | `ea7914f..8c56ef4` (app.setup, test e2e, env.sample, docs) | `review-1bcc732dc2aa3f1c` | 6 — 3 aplicados (ver L11) |
+| F follow-up H9 | `8c56ef4..bc24b66` (validación, unit spec, pin e2e, docs) | `review-57cc0f56197b9bd5` | 0 |
 
 **Del candidato A** (aplicados): divulgar la IP/SSH del VPS en el doc committeado (corregido), contradicción L7/L8 sin marcador de supersedencia (corregido), estado de review que sobrepasaba su cobertura (corregido con L9).
 
@@ -92,6 +94,8 @@ La rama completa excede el presupuesto de contexto del revisor (`lens_context_bu
 Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month`/`year` ignorados, R3-doc-count-1 conteo no reproducible) siguen abiertos como trabajo aparte.
 
 **L10** (estado): review `review-13c85558d4eeaec9` aprobado sobre los commits de docs posteriores; sus 2 hallazgos informativos de redacción se aplicaron ("sin correcciones" precisado a "sin corrección obligatoria", y L9 reescrito para describir el mapeo candidato→linaje real). En el mismo ciclo se corrigió H9 (trust proxy + test RED→GREEN, 12 tests verdes) y se verificó que H10 no era un defecto (`fileParallelism: false` desde `d2411f0`).
+
+**L11** (estado): review `review-1bcc732dc2aa3f1c` aprobó el fix de H9 con 6 hallazgos informativos. Los 3 accionables se corrigieron (`TRUST_PROXY_HOPS=""` ya no se coacciona a 0 y lo prueba `trust-proxy.unit.spec.ts` RED→GREEN; `setup-env.ts` fija la variable; la validación tiene test directo) y el candidato de seguimiento `review-57cc0f56197b9bd5` cerró **sin hallazgos**. Suite completa: 16 tests verdes en 5 archivos.
 
 ## Pendientes (del informe, no de esta feature)
 
