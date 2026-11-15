@@ -3,7 +3,7 @@
     "build": "nest build",
     "start": "tsx src/main.ts",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/src/main.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
