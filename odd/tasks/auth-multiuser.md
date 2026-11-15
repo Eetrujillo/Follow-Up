@@ -85,6 +85,8 @@ La rama completa excede el presupuesto de contexto del revisor (`lens_context_bu
 - R3-memory-store: storage en memoria del throttler — presupuesto por proceso, no por deployment; documentar o compartir storage si se escala horizontal.
 - R1-throttle-env-failfast: positivo — validación al arranque de `AUTH_THROTTLE_*`.
 
+**Del candidato H9 (`review-1bcc732dc2aa3f1c`, aprobado)** — 6 hallazgos informativos; los 3 accionables se corrigieron en el mismo ciclo: `TRUST_PROXY_HOPS=""` se coaccionaba silenciosamente a 0 (`Number('')`) y desactivaba el proxy trust sin señal (ahora rechaza y el test unitario lo prueba); el e2e de bucketing no fijaba la variable (ahora `setup-env.ts` la fija en 1); la validación al arranque no tenía test directo (nuevo `trust-proxy.unit.spec.ts`, 4 casos). Quedan como documentación: el trade-off spoofable si el backend queda directamente alcanzable con default 1 (usar `TRUST_PROXY_HOPS=0` en esa topología), y cobertura XFF condicionada al valor fijado — ambos ya anotados en `env.sample` y `setup-env.ts`.
+
 **Del candidato C1**: no había prueba de que nada importara de `backend/dist/generated/prisma`. Verificado: `grep` sobre `backend/src`, tests, Dockerfile y `package.json` no encuentra importers; `prisma generate` corre en el build del Dockerfile y el cliente vive en `node_modules`. Eran una copia obsoleta.
 
 Los 4 de T2 (R1-001 guard de base en la suite e2e, R1-002/R3-cal-params-1 `month`/`year` ignorados, R3-doc-count-1 conteo no reproducible) siguen abiertos como trabajo aparte.
