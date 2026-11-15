@@ -15,9 +15,10 @@ Se actualiza a medida que cada hallazgo se interviene. Un hallazgo pasa a ✅ so
 |---|---|---|
 | C1 — sin autorización por usuario | ✅ Corregido | T2: e2e `auth-isolation` pasó de 5 fallas a 7 verdes (401 sin token, listados cruzados, PATCH y DELETE ajenos → 404) |
 | C2 — JWT en localStorage + XSS | ⏳ En curso | T4 |
-| H1 — registro abierto sin límite | ⏳ En curso | T3 |
-| H2 — PII enumerable por id | ⏳ En curso | T3 |
+| H1 — registro abierto sin límite | ✅ Corregido | T3: `POST /api/users` devolvía **201 Created** sin token; ahora 404. Login y registro throttleados (429 verificado) |
+| H2 — PII enumerable por id | ✅ Corregido | T3: `GET /api/users/:id` eliminado; el perfil se lee en `GET /auth/me` con token |
 | H4 — backend sin tests | ✅ Corregido | T1: arnés e2e con vitest + SWC y base descartable |
+| H7 — `backend/dist/` versionado | ⏳ En curso | Detectado al compilar: 5 archivos derivados entran en cada commit |
 | M1 — fechas del calendario | ⚠️ Parcial: el DTO **sí** valida `@Min`/`@Max`; solo queda la zona horaria | Corregido en el texto de la sección 4 |
 | resto | Pendiente | — |
 
@@ -71,15 +72,17 @@ Los dos críticos se combinan en la misma cadena de ataque: **no hay autorizaci�
 
 ## 3. Hallazgos altos
 
-### H1 — Registro público abierto y sin límite de intentos
+### H1 — Registro abierto y sin límite de intentos
 
-`backend/src/users/users.controller.ts:9` expone `POST /api/users` sin guarda, y `auth.controller.ts:17` expone `POST /api/auth/register` sin límite. Además hay **dos caminos de registro** con formatos de respuesta distintos. No existe ningún throttle ni bloqueo por intentos, aunque `env.sample` y los comentarios de `docker-compose.yml` describen "lockout de login 5/15min" y "throttle de reenvío de email 3/60min": **esa configuración no tiene código detrás**. `auth.service.ts` no implementa ni el bloqueo ni el envío de emails de verificación.
-**Arreglo:** un solo endpoint de registro, rate limit (`@nestjs/throttler`) en login y registro, y borrar del `env.sample` toda variable que no exista en el código.
+`backend/src/users/users.controller.ts:9` exponía `POST /api/users` sin guarda, y `auth.controller.ts:17` exponía `POST /api/auth/register` sin límite: **dos caminos de registro** con formatos de respuesta distintos. No existe ningún throttle ni bloqueo por intentos en el backend.
+
+**Corrección de este informe:** una versión anterior de este documento afirmaba que `env.sample` y `docker-compose.yml` describían un lockout de login y un throttle de emails que no existían en el código. Esa afirmación era **falsa**: correspondía al compose de otro proyecto del mismo servidor. En este repo no hay ninguna mención a lockout, throttle ni SMTP.
+**Arreglo (hecho):** un solo endpoint de registro (`POST /auth/register`), `@nestjs/throttler` en login y registro con límites validados al arrancar, y `UsersController` eliminado.
 
 ### H2 — PII enumerable por id
 
-`users.controller.ts:14` (`GET /api/users/:id`) devuelve `fullName`, `email` y `createdAt` sin autenticación. El UUID mitiga la adivinanza, pero el endpoint no debería ser anónimo.
-**Arreglo:** mover la lectura de perfil a `GET /api/auth/me` (ya existe y está protegido) y eliminar el `GET` público de `users`.
+`users.controller.ts:14` (`GET /api/users/:id`) devolvía `fullName`, `email` y `createdAt` sin autenticación. El UUID mitiga la adivinanza, pero el endpoint no debía ser anónimo.
+**Arreglo (hecho):** `GET /api/auth/me` es la única lectura de perfil y exige token; el `UsersController` completo se eliminó.
 
 ### H3 — Sin defensas transversales en el arranque
 
@@ -97,13 +100,18 @@ Los dos críticos se combinan en la misma cadena de ataque: **no hay autorizaci�
 **Arreglo:** decidir por módulo: `import` real con guardas y tests, o borrado. Mantenerlos "por si acaso" es la deuda más caras de este repo porque sugiere capacidades que no existen.
 
 ### H6 — `calendar` acepta filtros y los ignora
-
 `calendar.controller.ts:17-19` recibe `month` y `year`, y `calendar.service.ts:57-70` (`findAll(month?, year?)`) **nunca los usa**: devuelve todos los eventos del usuario. El SPA cree estar filtrando por mes.
 **Arreglo:** filtrar por rango (`eventDate` entre el inicio y el fin del mes) o quitar los parámetros. En el estado actual es una mentira de la API, y silenciosa.
+
+### H7 — El resultado de compilación está versionado
+
+`backend/dist/` está en el repositorio (`git ls-files backend/dist` lista los `.js` emitidos). Cualquier `npm run build` ensucia el árbol de trabajo con artefactos derivados, y un `dist` viejo puede terminar servido si alguien ejecuta `node dist/src/main.js` sin recompilar. El `.gitignore` lo ignora para archivos nuevos, pero los ya rastreados siguen versionados.
+**Arreglo:** `git rm -r --cached backend/dist` y commitear la eliminación; el contenedor ya compila desde el código fuente.
 
 ---
 
 ## 4. Hallazgos medios
+
 
 | ID | Evidencia | Problema | Dirección |
 |---|---|---|---|
