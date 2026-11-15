@@ -3,7 +3,10 @@
     "build": "nest build",
     "start": "tsx src/main.ts",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/src/main.js"
+    "start:prod": "node dist/src/main.js",
+    "test:e2e": "bash test/e2e-db.sh start && vitest run --config vitest.config.ts",
+    "db:e2e:start": "bash test/e2e-db.sh start",
+    "db:e2e:stop": "bash test/e2e-db.sh stop"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -27,11 +30,17 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^12.5.0",
+    "@swc/core": "^1.16.22",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^26.4.1",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.3.2",
     "tsx": "^4.23.13",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "unplugin-swc": "^2.0.0",
+    "vitest": "^5.1.0"
   }
 }
