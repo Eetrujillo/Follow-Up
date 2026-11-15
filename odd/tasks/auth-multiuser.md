@@ -2,7 +2,7 @@
 
 Feature: multi-user authorization for Follow-Up. The audit (`docs/auditoria-app.md`) found that every business endpoint resolved a "default user" instead of the authenticated one.
 
-**Estado: implementado, probado, desplegado y con review nativo aprobado (RDD).**
+**Estado: implementado, probado y desplegado. Review nativo: T2 aprobado (`review-da56a9b1a00f716d`), A deploy+docs aprobado (`review-8e332370d2c8e9d2`); B (`41b3fcc`) y C (`0f4b9f2`) en revisión por presupuesto de contexto (candidatos encadenados).**
 
 ## Specs
 
@@ -28,7 +28,7 @@ Feature: multi-user authorization for Follow-Up. The audit (`docs/auditoria-app.
 ## Estado verificado del despliegue (2026-11-15)
 
 - Run `43676083408` en GitHub Actions: **success**. `prod = 3f6cf1e`.
-- VPS (`root@66.94.110.162`), clon en `/root/admin/home/projects/victor/Follow-Up`, rama `prod`, submódulo `1de5214`.
+- VPS (identificadores y ruta del clon guardados fuera del repo — el repo es público; ver DEPLOY.md y la memoria local para el acceso), rama `prod`, submódulo `1de5214`.
 - `followup-frontend` y `followup-backend` recreados; `followup-postgres` **sin reiniciar** (los datos sobreviven al deploy de código).
 - Evidencia contra el servidor: `GET /api/tasks` sin token → **401** (antes devolvía los datos del dueño), `POST /api/users` → **404** (antes **201**, creaba cuentas anónimas), `Content-Security-Policy` presente, `https://follow-up.eetrujillo.dev/` → 200.
 - Tests: `cd backend && npm run test:e2e` → **11 tests verdes en 4 archivos**. El comando levanta un `postgres:16-alpine` desechable en `127.0.0.1:55432` y aplica las migraciones reales.
@@ -89,6 +89,8 @@ Los dos bloqueos previos quedaron resueltos: el binario `gentle-ai` ya estaba in
 
 **L6** (corrección): el informe marcaba C2 como crítico por XSS en el notepad. El único llamador de `insertHtmlAtCursor` pasaba markup constante y el pegado entra como nodo de texto, así que era riesgo latente, no vulnerabilidad activa. Bajó a alta; se eliminó el sink igual.
 
-**L7** (estado): implementación, tests y deploy completos y verificados. El review nativo no pudo correr por configuración del entorno (modelo de las lentes y binario del paquete), no por el candidato.
+**L7** (estado, superado por L8): implementación, tests y deploy completos y verificados. El review nativo no pudo correr por configuración del entorno (modelo de las lentes y binario del paquete), no por el candidato. La configuración se arregló después; L8 es el estado final.
 
 **L8** (estado): review nativo aprobado sin correcciones. Los bloqueos eran de entorno: faltaba materializar `models.json` (routing ya definido en `profiles.json`) y correr `gentle-ai sync` tras la actualización de assets. Los 4 hallazgos son informativos; R1-001 (guard de base en la suite e2e) es el único con acción recomendada de código.
+
+**L9** (estado): el linaje `review-da56a9b1a00f716d` aprobó solo el candidato `a6a3086` (T2). El resto de la rama se revisa como candidatos encadenados por el presupuesto de contexto del revisor: A deploy+docs (linaje `review-8e332370d2c8e9d2`, aprobado, con 3 hallazgos informativos — se corrigió la divulgación de la IP del VPS en este documento), B commit `41b3fcc` partido en 2, C borrado de `dist` en `0f4b9f2`. El estado del encabezado refleja cada uno al cerrarse.
