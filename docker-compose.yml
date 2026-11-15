@@ -52,13 +52,13 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    # Published on every interface because the VPS has no domain or TLS yet and
-    # the site is reached as http://<ip>:3202. ufw does NOT protect this port:
-    # Docker writes its DNAT rules before the INPUT chain, so a published port is
-    # reachable even with ufw denying it. To go back to loopback-only behind a
-    # host reverse proxy, prefix the value with 127.0.0.1: (see DEPLOY.md).
+    # Bound to loopback on purpose. The host already runs an nginx on 80/443 that
+    # terminates TLS and proxies to 127.0.0.1:3202, the same pattern as the
+    # neighbouring adulto-mayor site. Never widen this to 0.0.0.0: ufw does NOT
+    # protect a published port, because Docker writes its DNAT rules in
+    # PREROUTING/FORWARD, before the INPUT chain ufw filters.
     ports:
-      - "${FRONTEND_PORT:-3202}:3202"
+      - "127.0.0.1:${FRONTEND_PORT:-3202}:3202"
     networks:
       - followup-net
 

@@ -1,7 +1,8 @@
 # Deploy
 
-Three containers behind one published port. No domain and no TLS yet: the site is
-reached as `http://<server-ip>:3202`.
+Three containers behind one port published on loopback. The host nginx, which
+serves the neighbouring apps on the same VPS, terminates TLS and proxies to
+`127.0.0.1:3202`.
 
 ```
 browser ──▶ frontend (nginx :3202) ──/api/*──▶ backend (NestJS :3000) ──▶ postgres (:5432)
@@ -40,14 +41,20 @@ Both halves of that decision are load-bearing:
 
 ## First deploy on the server
 
-Assumes a Docker-capable user and a directory for the project.
+Assumes a Docker-capable user and a directory for the project. On the current VPS
+the checkout lives at `/root/admin/home/projects/victor/Follow-Up`, next to the
+other apps:
 
 ```bash
-mkdir -p ~/admin/home/projects/victor
-cd ~/admin/home/projects/victor
-git clone git@github.com:Eetrujillo/Follow-Up.git
+cd /root/admin/home/projects/victor
+git clone https://github.com/Eetrujillo/Follow-Up.git
 cd Follow-Up
-git submodule update --init --recursive
+git checkout prod
+# .gitmodules points at git@github.com, which needs a key on the server; the
+# repositories are public, so override it to HTTPS for this clone.
+git config submodule.frontend.url https://github.com/Eetrujillo/Follow_Up.git
+git -c url."https://github.com/".insteadOf="git@github.com:" \
+    submodule update --init --recursive
 
 cp env.sample .env
 ```
@@ -77,7 +84,7 @@ Migrations run automatically: the backend container executes
 | Port | Owner |
 |---|---|
 | 3201 | adulto mayor platform |
-| 3202 | this project |
+| 3202 | this project, on loopback only |
 
 `FRONTEND_PORT` in `.env` changes the published port.
 
@@ -85,18 +92,37 @@ Migrations run automatically: the backend container executes
 
 A published port is reachable from the internet **even if ufw denies it**: Docker
 writes its DNAT rules in `PREROUTING`/`FORWARD`, before the `INPUT` chain that ufw
-filters. Port 3202 being open is therefore a property of the compose file, not of
-the firewall.
+filters. That is why this compose file publishes on `127.0.0.1` and the host
+nginx is the only public entry, the same way the adulto mayor platform does it.
 
-To expose the site only behind a host reverse proxy with TLS, publish on loopback
-instead:
+### Host reverse proxy and TLS
 
-```yaml
-ports:
-  - "127.0.0.1:${FRONTEND_PORT:-3202}:3202"
+The host nginx owns 80 and 443 and already serves the neighbouring sites. Add a
+server block that proxies the public name to the loopback port, then let certbot
+issue the certificate:
+
+```nginx
+server {
+    server_name follow-up.apolobyte.online;
+    location / {
+        proxy_pass http://127.0.0.1:3202;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
 ```
 
-and proxy to it from the host nginx, the same way the adulto mayor platform does.
+```bash
+ln -s /etc/nginx/sites-available/follow-up /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+certbot --nginx -d follow-up.apolobyte.online
+```
+
+On Cloudflare the record must be **DNS only** (grey cloud) while certbot
+validates, or the HTTP-01 challenge never reaches the server. Proxying can be
+re-enabled afterwards, with SSL/TLS mode set to Full (strict).
 
 ## Automated deploy
 
