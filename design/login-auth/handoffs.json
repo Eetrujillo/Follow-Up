@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "01-doble-plano.html",
+  "handoffs": {
+    "01-doble-plano.html": {
+      "status": "implemented",
+      "queued": true,
+      "sentAt": "2026-11-16T16:06:49.548Z",
+      "startedAt": null,
+      "implementedAt": "2026-11-16T16:24:10.072Z",
+      "feature": "odd/tasks/ui-redesign.md",
+      "note": "«Doble plano» implementado en el SPA (no copia del artboard): split de auth en styles.css con tokens del sistema (grid 2fr/3fr, panel de identidad en --s1, card en --s2), login y signup con la aritmética de controles intacta (correo, ojo accesible, errores, spinner, enlace). El panel usa descripciones reales de áreas, no cifras inventadas. Suite 15 archivos / 50 tests, build exit 0. Renders verificados a 1440px y 420px.",
+      "previewUrl": "http://127.0.0.1:4294/login"
+    }
+  }
+}

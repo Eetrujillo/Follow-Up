@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login — Dirección 1 · Doble plano</title>
+<style>
+  :root {
+    --canvas:#0d0e0f; --s1:#141617; --s2:#1a1d1f; --s3:#212527;
+    --hairline:rgba(255,255,255,0.075); --hairline-2:rgba(255,255,255,0.12);
+    --t1:#f0f2f3; --t2:#a3abaf; --t3:#798184;
+    --accent:#e0b155; --accent-dim:rgba(224,177,85,0.16);
+    --danger:#e2836f; --danger-dim:rgba(226,131,111,0.09); --danger-line:rgba(226,131,111,0.35);
+    --r-ctl:3px; --r-box:5px; --ease:cubic-bezier(0.2,0.8,0.25,1); --fast:140ms; --slow:260ms;
+    --font-body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --font-mono:ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body { background:var(--canvas); color:var(--t1); font:13px/1.5 var(--font-body); display:grid; grid-template-columns:2fr 3fr; }
+
+  /* ---- panel de identidad (izquierda) ---- */
+  .brand {
+    background:var(--s1); border-right:1px solid var(--hairline);
+    padding:56px 48px; display:flex; flex-direction:column;
+  }
+  .brand__mark { display:flex; align-items:center; gap:10px; }
+  .brand__mark svg { width:26px; height:26px; color:var(--accent); }
+  .brand__mark span { font-size:16px; font-weight:600; letter-spacing:-0.01em; }
+  .brand__hero { margin:auto 0; max-width:360px; }
+  .brand__hero h2 { font-size:26px; line-height:1.25; font-weight:600; letter-spacing:-0.02em; }
+  .brand__hero p { color:var(--t2); margin-top:10px; max-width:32ch; }
+  .brand__list { margin-top:36px; }
+  .brand__row { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--hairline); color:var(--t2); font-size:13px; }
+  .brand__row:first-child { border-top:1px solid var(--hairline-2); }
+  .brand__row svg { width:16px; height:16px; color:var(--t3); flex:none; }
+  .brand__row b { color:var(--t1); font-weight:500; margin-right:auto; }
+  .brand__num { font:12px var(--font-mono); color:var(--t3); font-variant-numeric:tabular-nums; }
+  .brand__foot { color:var(--t3); font-size:12px; }
+
+  /* ---- plano del formulario (derecha) ---- */
+  .pane { display:grid; place-items:center; padding:40px; }
+  .card {
+    width:380px; background:var(--s2); border:1px solid var(--hairline); border-radius:var(--r-box);
+    padding:32px 30px 26px;
+    animation:rise var(--slow) var(--ease) both;
+  }
+  @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { .card { animation:none; } }
+
+  .card h1 { font-size:19px; font-weight:600; letter-spacing:-0.01em; }
+  .card .sub { color:var(--t2); margin-top:4px; }
+
+  .fgroup { margin-top:20px; }
+  .fgroup label { display:block; font-size:12px; font-weight:500; color:var(--t2); margin-bottom:6px; }
+  .field {
+    width:100%; height:34px; padding:0 10px; border:1px solid var(--hairline-2); border-radius:var(--r-ctl);
+    background:var(--canvas); color:var(--t1); font:13px var(--font-body);
+    transition:border-color var(--fast) var(--ease), background var(--fast) var(--ease);
+  }
+  .field::placeholder { color:var(--t2); }
+  .field:hover { border-color:rgba(255,255,255,0.18); }
+  .field:focus { outline:none; border-color:var(--accent); background:var(--s2); }
+  .pwrap { position:relative; }
+  .pwrap .field { padding-right:38px; }
+  .ojo {
+    position:absolute; right:3px; top:3px; width:28px; height:28px;
+    display:inline-flex; align-items:center; justify-content:center;
+    border:1px solid transparent; border-radius:var(--r-ctl); background:transparent; color:var(--t2); cursor:pointer;
+    transition:background var(--fast) var(--ease), color var(--fast) var(--ease);
+  }
+  .ojo:hover { background:var(--s3); color:var(--t1); }
+  .ojo svg { width:16px; height:16px; }
+  .err { display:block; color:var(--danger); font-size:12px; margin-top:5px; }
+  .errbox {
+    margin-top:16px; padding:9px 11px; background:var(--danger-dim); border:1px solid var(--danger-line);
+    border-radius:var(--r-ctl); color:var(--danger); font-size:12px;
+  }
+
+  .submit {
+    margin-top:22px; width:100%; height:36px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--accent); border:1px solid var(--accent); border-radius:var(--r-ctl);
+    color:#17140c; font:600 13px var(--font-body); cursor:pointer;
+    transition:background var(--fast) var(--ease), transform var(--fast) var(--ease);
+  }
+  .submit:hover { background:#eec06a; }
+  .submit:active { transform:scale(0.99); }
+  .foot { margin-top:18px; text-align:center; color:var(--t2); font-size:12.5px; }
+  .foot a { color:var(--t1); text-decoration:underline; text-decoration-color:var(--hairline-2); text-underline-offset:3px; transition:text-decoration-color var(--fast) var(--ease); }
+  .foot a:hover { text-decoration-color:var(--accent); }
+
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+  @media (max-width: 860px) {
+    body { grid-template-columns:1fr; }
+    .brand { display:none; }
+  }
+</style>
+</head>
+<body>
+  <aside class="brand">
+    <div class="brand__mark">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <circle cx="10" cy="10" r="8"/>
+        <path d="M10 5.5V10l3 2"/>
+      </svg>
+      <span>Follow-Up</span>
+    </div>
+
+    <div class="brand__hero">
+      <h2>Tu semana, en una sola superficie.</h2>
+      <p>Tareas, calendario, biblioteca y notas conviven en el mismo tablero. Sin ruido, sin pestañas perdidas.</p>
+    </div>
+
+    <div class="brand__list" role="list">
+      <div class="brand__row" role="listitem">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="1"/><path d="M7 8h6M7 11h6"/></svg>
+        <b>Biblioteca</b><span class="brand__num">12 docs</span>
+      </div>
+      <div class="brand__row" role="listitem">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="1"/><path d="M3 8h14M7 2v4M13 2v4"/></svg>
+        <b>Calendario</b><span class="brand__num">3 eventos</span>
+      </div>
+      <div class="brand__row" role="listitem">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 3h8l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
+        <b>Notas</b><span class="brand__num">7 notas</span>
+      </div>
+    </div>
+
+    <p class="brand__foot">follow-up.eetrujillo.dev</p>
+  </aside>
+
+  <main class="pane">
+    <section class="card" aria-labelledby="auth-title">
+      <h1 id="auth-title">Follow-Up</h1>
+      <p class="sub">Inicia sesion para continuar</p>
+
+      <form aria-label="Formulario de inicio de sesión">
+        <div class="fgroup">
+          <label for="login-email">Correo electronico</label>
+          <input id="login-email" class="field" type="email" placeholder="usuario@gmail.com" autocomplete="email">
+        </div>
+
+        <div class="fgroup">
+          <label for="login-pass">Contraseña</label>
+          <div class="pwrap">
+            <input id="login-pass" class="field" type="password" placeholder="Mínimo 8 caracteres" autocomplete="current-password">
+            <button type="button" class="ojo" aria-label="Mostrar contraseña" aria-pressed="false">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 10s3.5-5 8-5 8 5 8 5-3.5 5-8 5-8-5-8-5z"/><circle cx="10" cy="10" r="2.5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="errbox" role="alert">Credenciales incorrectas. Revisa tu correo y contraseña.</div>
+
+        <button type="submit" class="submit">Iniciar sesion</button>
+      </form>
+
+      <p class="foot">¿No tienes cuenta? <a href="#">Registrate</a></p>
+    </section>
+  </main>
+</body>
+</html>

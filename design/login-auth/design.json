@@ -1,0 +1,28 @@
+{
+  "title": "Login — Follow-Up",
+  "brief": "Rediseño del login con más presencia visual (S8): mismo inventario de controles (correo + validaciones, contraseña con ojo, caja de estado éxito/error, submit con spinner, enlace Registrate), sobre los tokens del sistema «Instrumento». El signup hereda la dirección elegida para no dejar la pareja contradictoria.",
+  "feature": "odd/tasks/ui-redesign.md",
+  "artboards": [
+    {
+      "file": "01-doble-plano.html",
+      "title": "Doble plano",
+      "tradeoff": "Identidad fuerte: panel izquierdo con producto y contexto real (biblioteca/calendario/notas). En pantallas angostas el panel desaparece y queda el formulario.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-foco-total.html",
+      "title": "Foco total",
+      "tradeoff": "Máxima claridad: una sola columna centrada, tipografía protagonista, marca compacta. Menos narrativa; el error de campo se muestra inline junto a la etiqueta.",
+      "width": 1280,
+      "height": 800
+    },
+    {
+      "file": "03-mesa-de-trabajo.html",
+      "title": "Mesa de trabajo",
+      "tradeoff": "Contexto de escritorio: retícula sutil de hairlines, la card es una hoja con una sombra real, franja inferior con el estado de la semana y el pomodoro. Más superficie, aún sobria.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

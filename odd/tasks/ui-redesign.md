@@ -23,6 +23,14 @@ de diseño en HTML para elegir. La implementación en Angular ocurre después de
 - **S6** — «pon a prueba todas las skills y que no vayan a contradecir»: una sola regla
   resuelta por conflicto, registrada en «Reconciliación de skills». Ninguna skill se
   aplica contra otra sin dejar la decisión escrita.
+- **S7** (L6) — «arregla la parte del reloj»: el Pomodoro sobrevive la navegación.
+  Salir del dashboard a otra página NO borra el estado; al volver, si estaba
+  corriendo se descuenta el tiempo ausente con ancla de época y sigue su cuenta.
+  Sigue aislado por cuenta de usuario.
+- **S8** (L6) — «el login está muy simple, crea un diseño»: el login gana un
+  tratamiento visual con más diseño (su par signup en la misma familia para no
+  dejarlos contradictorios), sobre un artboard nuevo en el lienzo, implementado
+  tras aprobación del humano. Mismos controles del inventario, ninguna pérdida.
 
 ### Reconciliación de skills (vinculante)
 
@@ -53,6 +61,9 @@ de diseño en HTML para elegir. La implementación en Angular ocurre después de
 - T14 — Corrección de los blockers del verificador (calendario, suite, foco de notepad, foco de library, budget de dashboard) — hecho
 - T15 — Corrección de los defectos visuales del render real (ancho de card, superficies, placeholder, sidebar con query string, scroll en apaisado, foco de inputs) — hecho
 - T16 — Pendiente de decisión humana: crear rama `feat/ui-redesign` en el submódulo y commitear por unidad de trabajo; falta verificar el render de las 5 páginas internas, que exige backend + Postgres
+- T17 — Reloj: el dashboard adopta `TimerService` (pausa/reanudación real, por cuenta, con ancla `startedAt`); `ngOnDestroy` deja de borrar el estado — RED→GREEN
+- T18 — Diseño nuevo del login: artboards en `design/login-auth/` + aprobación del humano — hecho: 3 direcciones, humano eligió **«Doble plano»** (`01-doble-plano.html`)
+- T19 — Implementar el login (y par signup) tras la aprobación — hecho: split de auth en `styles.css` (grid 2fr/3fr, panel de identidad + card), login y signup migrados con la aritmética de controles intacta y sin cifras inventadas en el panel; suite 15/50, build exit 0, renders verificados a 1440px (login, signup) y 420px (móvil, panel colapsado)
 
 ## Log
 
@@ -61,3 +72,7 @@ de diseño en HTML para elegir. La implementación en Angular ocurre después de
 - **L3** (dirección elegida por el humano): **A · Instrumento**, elegida por el humano sobre los 3 artboards. Implementación completa en el submódulo `frontend` (7 páginas + shell), sin commit.
 - **L4** (verificación independiente): veredicto inicial **NO APTO** por dos blockers reales, ambos corregidos: (1) el calendario enviaba `var(--ev-N)` como `colorHex` y el backend lo rechaza con `@IsHexColor()`, así que crear y editar eventos devolvía 400 en silencio — ahora viaja hex real espejo de los tokens, con test de regresión RED→GREEN; (2) la suite quedó en rojo por el patrón de detección zoneless (NG0100), matchers Jasmine en vitest y un stub de router sin la ruta `login`, más el foco del modal de notepad con `setTimeout` antes del render (ahora `afterNextRender`, como library).
 - **L5** (verificación visual con navegador real): encontró la card de auth clavada en 286px por un `auth-wrap` sin ancho (ahora 380px medidos), la card sobre `--s1` donde el brief pedía `--s2`, campos del mismo color que la card, placeholder en 4.57:1, el sidebar renderizándose en `/login?registered=true` (bug preexistente del flujo real signup→login, ahora comparison por pathname con test) y el signup cortado en teléfono apaisado (ahora `:host` con scroll). Todo corregido y medido por CDP.
+- **L6** (pedido del humano, literal): «no me gusto el login esta muy simple crea un diseño a y arregla la parte del reloj por que cuando lo inicio y voy a otra parte de kas pagina por ejemplo a calendario y luego regreso se reinicia como si nuncca lo hubiera tocado». Causa raíz del reloj hallada: `ngOnDestroy` del dashboard ejecuta `localStorage.removeItem('pomodoro')` — salir de la página borra el estado a propósito, y la clave cruda no tiene ancla de época; `TimerService` (por cuenta, con `startedAt`) era código muerto. Orden acordado: reloj primero (comportamiento), diseño del login después (requiere aprobación del humano).
+- **L7** (T17, reloj): RED observado (2 tests nuevos de supervivencia del Pomodoro fallando contra el dashboard, `'pomodoro'` crudo y `removeItem` en `ngOnDestroy`) → dashboard adopta `TimerService` (`restore()` con ancla `startedAt`, `save()` con `startedAt: isRunning ? Date.now() : null`, `ngOnDestroy` deja de borrar) → GREEN: suite completa 15 archivos / 50 tests + build exit 0. El servicio ganó 2 tests: reanudación por ancla (538–540s tras 60s fuera) y fin no-negativo (ausencia ≥ restante → detenido en 0).
+- **L8** (T18, login): sync del design system corrido (fuentes: `frontend/src/styles.css`; 27 tokens de color + 8 de forma/movimiento + tipografía → `design/system.md` + `design/system.html`). Nuevo diseño `design/login-auth/` con 3 direcciones: «Doble plano» (panel de identidad + formulario), «Foco total» (columna única tipográfica) y «Mesa de trabajo» (retícula hairline, card como hoja con una sombra, franja con el estado de la semana). Misma aritmética de controles del login actual; el signup hereda la dirección elegida.
+- **L9** (T18–T19, implementación «Doble plano»): el panel de identidad leyó las filas con descripciones reales de las áreas (no cifras que antes del login serían inventadas). Defecto del primer render corregido: los SVG de fila sin tamaño intrínseco se hinchan (rompían el layout); 16px + `display:block` fijado. Trampa de la verificación visual: un server de Node sin Content-Type correcto silencia `type="module"` (pantalla negra); verificar con servers que emitan MIME. Suite final 15 archivos / 50 tests, build exit 0.
