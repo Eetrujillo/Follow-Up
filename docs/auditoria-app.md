@@ -25,7 +25,7 @@ Se actualiza a medida que cada hallazgo se interviene. Un hallazgo pasa a ✅ so
 | Nuevo — `completedAt` nunca escrito | ✅ Corregido (2026-11-16) | Se sella al completar, se limpia al reabrir, y un PATCH repetido no lo mueve |
 | Nuevo — `origin` lo elegía el cliente | ✅ Corregido (2026-11-16) | `POST /api/tasks` ignora `origin`: sólo el servicio de calendario crea tareas `CALENDAR` |
 | Nuevo — strings sin límite | ✅ Corregido (2026-11-16) | `description` 2000, `title` 200, `fullName` 120 y sin sólo espacios |
-| Nuevo — `PATCH /api/calendar/:id` inexistente | ✅ Implementado (2026-11-16) | Editar un evento ya no da 404: renombrarlo renombra la tarea vinculada (`Evento: <title>`) y mover la fecha mueve también su `dueDate`, en una transacción. e2e `calendar-update` + `calendar-update-contract` (14 tests) |
+| Nuevo — `PATCH /api/calendar/:id` inexistente | ✅ Implementado (2026-11-16) | Editar un evento ya no da 404: renombrarlo renombra la tarea vinculada (`Evento: <title>`) y mover la fecha mueve también su `dueDate`, en una transacción. e2e `calendar-update` + `calendar-update-contract` (15 tests) |
 | Nuevo — `npm start` arrancaba **sin validación** | ✅ Corregido (2026-11-16) | `start` era `tsx src/main.ts`, y tsx/esbuild no emite `emitDecoratorMetadata`: Nest no veía el tipo del body y **todos** los `ValidationPipe` quedaban apagados (registro con email inválido y nombre de espacios → **201**, con 9 warnings de metadata). Ahora `nest start` (tsc): mismo request → **400**, cero warnings |
 | H3, H5, H6, M4, M6, M7, M8 y los L* | Pendiente | Ver secciones 3, 4 y 5 |
 
@@ -235,7 +235,7 @@ Sigue pendiente de decisión: JWT en `localStorage` (C2) y ausencia de revocaci�
 | `calendar/dto/update-calendar-event.dto.ts` (nuevo) | Fecha como unidad: o vienen `day`+`month`+`year` o ninguno; media fecha es 400. `null` explícito también es 400 (`@ValidateIf(v !== undefined)` en cada campo, no `@IsOptional`, que dejaba pasar `{"title": null}` hasta la base y devolvía 500); el servicio además sólo construye la fecha si los tres son números, porque `Date.UTC(null, …)` da 1899-11-30 |
 | `calendar/calendar.service.ts` + controller | `PATCH /api/calendar/:id`: título y color del evento, y la tarea vinculada se renombra y se mueve con él en la misma transacción |
 | `test/calendar-update.e2e-spec.ts` (nuevo) | 7 tests: renombrar, recolorear, mover la fecha, fecha incompleta, fecha inexistente, ajeno → 404, sin token → 401 |
-| `test/calendar-update-contract.e2e-spec.ts` (nuevo) | 7 tests de borde: fecha toda `null` no corrompe las dos filas, `null` en título/color → 400 y no 500, mensajes exactos, evento sin tarea vinculada, rollback con trigger forzado, vínculo manipulado a tarea ajena, color-only leído de la base |
+| `test/calendar-update-contract.e2e-spec.ts` (nuevo) | 8 tests de borde: fecha toda `null` no corrompe las dos filas, `null` en título/color → 400 y no 500, mensajes exactos, fecha parcial (`{month, year}` sin `day`) no es no-op, evento sin tarea vinculada, rollback con trigger forzado, vínculo manipulado a tarea ajena, color-only leído de la base |
 
 ### 9.3 Encontrado y no tocado (necesita decisión o es alcance aparte)
 
