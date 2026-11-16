@@ -150,6 +150,15 @@ repository secrets:
   with superseded builds.
 - The postgres data lives in the `postgres_data` volume. Removing it with
   `docker compose down -v` deletes every user and document.
+- The host nginx sends `Content-Security-Policy: script-src 'self'` (see
+  `docs/auditoria-app.md`, C2). Because of that, the production build keeps
+  `optimization.styles.inlineCritical` **off** in `frontend/angular.json`: with
+  it on, the builder rewrites the global stylesheet to
+  `<link media="print" onload="this.media='all'">`, and the CSP blocks that
+  inline handler, so only the small inlined critical block applies and every
+  page renders unstyled. If the CSP ever gains `'unsafe-inline'` for scripts,
+  revisit this; otherwise leave the flag off and verify a deployed deep route
+  (`/login`) renders styled after any build-config change.
 
 ## Security follow-up (not solved by this deploy)
 
