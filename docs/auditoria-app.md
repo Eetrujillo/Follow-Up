@@ -18,9 +18,16 @@ Se actualiza a medida que cada hallazgo se interviene. Un hallazgo pasa a ✅ so
 | H1 — registro abierto sin límite | ✅ Corregido | T3: `POST /api/users` devolvía **201 Created** sin token; ahora 404. Login y registro throttleados (429 verificado) |
 | H2 — PII enumerable por id | ✅ Corregido | T3: `GET /api/users/:id` eliminado; el perfil se lee en `GET /auth/me` con token |
 | H4 — backend sin tests | ✅ Corregido | T1: arnés e2e con vitest + SWC y base descartable |
-| H7 — `backend/dist/` versionado | ⏳ En curso | Detectado al compilar: 5 archivos derivados entran en cada commit |
-| M1 — fechas del calendario | ⚠️ Parcial: el DTO **sí** valida `@Min`/`@Max`; solo queda la zona horaria | Corregido en el texto de la sección 4 |
-| resto | Pendiente | — |
+| H7 — `backend/dist/` versionado | ✅ Corregido | T3b (`0f4b9f2`): `backend/dist` ya no existe en el árbol; el contenedor compila en el build |
+| M1 — fechas del calendario | ✅ Corregido (2026-11-16) | e2e `tasks-calendar-integrity`: `{month:2, day:31}` pasó de **201 guardado como 3 de marzo** a 400; la fecha se guarda en UTC (`…T00:00:00.000Z`, antes `…T05:00:00.000Z` con la zona del servidor). La corrida fija `TZ=America/Lima` para que la regresión vuelva a ser detectable en un host UTC |
+| M2 — borrado asimétrico tarea/evento | ✅ Corregido (2026-11-16) | Borrar la tarea de un evento ya no deja el evento huérfano (`ON DELETE SET NULL`), y se quitó el `catch` que tragaba la falla del borrado inverso |
+| M5 — sin `@@index([userId])` | ✅ Corregido (2026-11-16) | Migración `20261116034701_add_owner_indexes` sobre `Task`, `CalendarEvent`, `Document`, `Folder` |
+| Nuevo — `completedAt` nunca escrito | ✅ Corregido (2026-11-16) | Se sella al completar, se limpia al reabrir, y un PATCH repetido no lo mueve |
+| Nuevo — `origin` lo elegía el cliente | ✅ Corregido (2026-11-16) | `POST /api/tasks` ignora `origin`: sólo el servicio de calendario crea tareas `CALENDAR` |
+| Nuevo — strings sin límite | ✅ Corregido (2026-11-16) | `description` 2000, `title` 200, `fullName` 120 y sin sólo espacios |
+| Nuevo — `PATCH /api/calendar/:id` inexistente | ✅ Implementado (2026-11-16) | Editar un evento ya no da 404: renombrarlo renombra la tarea vinculada (`Evento: <title>`) y mover la fecha mueve también su `dueDate`, en una transacción. e2e `calendar-update` + `calendar-update-contract` (14 tests) |
+| Nuevo — `npm start` arrancaba **sin validación** | ✅ Corregido (2026-11-16) | `start` era `tsx src/main.ts`, y tsx/esbuild no emite `emitDecoratorMetadata`: Nest no veía el tipo del body y **todos** los `ValidationPipe` quedaban apagados (registro con email inválido y nombre de espacios → **201**, con 9 warnings de metadata). Ahora `nest start` (tsc): mismo request → **400**, cero warnings |
+| H3, H5, H6, M4, M6, M7, M8 y los L* | Pendiente | Ver secciones 3, 4 y 5 |
 
 ---
 
@@ -124,12 +131,15 @@ De los 14 archivos de test del SPA, **12 fallaban** en el código actual (16 de 
 |---|---|---|---|
 | M1 | `calendar.service.ts:26` | `new Date(year, month-1, day)` construye la fecha en la zona horaria del **servidor**, no del usuario: un evento del día 15 puede verse el 14 en otro huso. (El DTO sí acota `month` 1-12 y `day` 1-31, así que el desborde silencioso no es alcanzable por HTTP) | Construir la fecha en UTC (`Date.UTC`) o guardar fecha + zona explícita |
 | M2 | `calendar.service.ts:80-83` | Al borrar un evento, el borrado de la tarea encadenada va con `.catch(() => null)`: cualquier falla se traga y queda una tarea huérfana | No silenciar: o transacción completa o error explícito |
-| M3 | `tasks.service.ts:11-17`, `calendar.service.ts:11-17` | `getDefaultUserId()` duplicado literal en dos servicios | Extraer a un servicio o eliminarlo con C1 |
 | M4 | `tasks.controller.ts:19,24`, `calendar.controller.ts:20` | Sin `ParseUUIDPipe`: un id inválido llega a Prisma y devuelve 500 en vez de 400 | `ParseUUIDPipe` como ya se usa en `users.controller.ts:15` |
 | M5 | `prisma/schema.prisma` | No hay `@@index([userId])` en `Task`, `CalendarEvent`, `Document`, `Folder`; todos los accesos son por `userId` | Agregar índices antes de que el volumen importe (barato ahora, molesto después) |
 | M6 | `auth.service.ts:31-46` | `login` devuelve `access_token` en el body y no hay refresh: sesión muerta a las 24 h sin aviso, el usuario pierde trabajo en curso | Definir estrategia (refresh + cookie, o aviso de expiración en el SPA) |
 | M7 | `frontend/angular.json:33-46` | El budget inicial es 500 kB y el build real emite **606 kB**; dos CSS de componentes exceden el suyo. Son warnings, así que el build pasa y la deuda crece hasta el error de 1 MB | Subir el budget a un número intencional o bajar el bundle (lazy loading de rutas pesadas) |
 | M8 | `frontend/src/app/shared/services/ai.service.ts` | La generación de tareas con IA está deshabilitada a propósito (devuelve error). Si la UI ofrece el botón, el usuario ve un fallo sin explicación | Ocultar la acción en la UI o implementar `POST /api/ai/tasks` en el backend |
+
+**Corrección de este informe (2026-11-16).** La frase «el desborde silencioso no es alcanzable por HTTP» era **falsa**: `@Max(31)`/`@Max(12)` validan cada campo por separado, no la combinación, así que `{month:2, day:31}` se aceptaba con 201 y se guardaba como 3 de marzo (y `year` sin `@Max` producía `Invalid Date` → 500). Corregido con el validador `IsRealCalendarDate` (`backend/src/calendar/dto/is-real-calendar-date.ts`), que compara el día/mes/año contra la fecha construida, y con `Date.UTC` en el servicio. Evidencia: e2e `test/tasks-calendar-integrity.e2e-spec.ts`.
+
+Dos precisiones más sobre este cuadro: **M3 quedó obsoleto** (C1 eliminó `getDefaultUserId()`), y **M4 estaba mal diagnosticado**: no hay 500, porque `id` es `TEXT` sin `@db.Uuid` (`migration.sql:21`) y un id inválido simplemente no encuentra fila → 404. Sigue faltando el `ParseUUIDPipe`, pero por claridad de contrato, no por un 500 real. **M5** pasó a ✅ con la migración `20261116034701_add_owner_indexes`.
 
 ---
 
@@ -154,7 +164,7 @@ De los 14 archivos de test del SPA, **12 fallaban** en el código actual (16 de 
 
 No son fallas, son decisiones que cambian el tamaño del arreglo. Sin resolverlas, cualquier parche de C1 es a ciegas.
 
-1. **¿La app es de un usuario o multiusuario?** `getDefaultUserId()` y la ausencia de `userId` en el token indican que el diseño real es de un solo dueño. Si es así, el arreglo correcto no es "multiusuario" sino: un único usuario propietario, registro público cerrado, y un guard que exija que el token sea del dueño. Si es multiusuario, cada servicio necesita el `userId` del token y hay que migrar datos existentes.
+1. **¿La app es de un usuario o multiusuario?** ~~Sin decidir~~ **Resuelto: multiusuario.** C1 se cerró con guardas por controller y `userId` del token en cada servicio, y `test/auth-isolation.e2e-spec.ts` lo pinea. Queda la deuda de la cookie `HttpOnly` (C2) y la revocación de sesión (M6).
 2. **¿El registro queda abierto?** Hoy cualquiera crea cuentas por dos endpoints distintos. Con el modelo de un dueño, el primer registro debería ser un comando de operación (seed), no un endpoint público.
 3. **¿Dónde vive la sesión?** `localStorage` es simple y cómodo de desarrollar, e incompatible con tener XSS. Cambiar a cookie `HttpOnly` toca backend, interceptor y CORS. Es una decisión de producto, no un detalle.
 4. **¿Qué pasa con `documents`, `folders`, `notepad`, `stats`?** Cuatro módulos muertos. O se montan con guardas y tests, o se borran. Dejarlos es comprometerse a mantener código que nadie ejecuta.
@@ -168,7 +178,7 @@ No son fallas, son decisiones que cambian el tamaño del arreglo. Sin resolverla
 
 | Promesa en documentación | Estado real | Hallazgo |
 |---|---|---|
-| `env.sample`: lockout de login 5 intentos / 15 min | No implementado | H1 |
+| `env.sample`: lockout de login 5 intentos / 15 min | **Corregido en este documento**: `env.sample` documenta hoy `AUTH_THROTTLE_LIMIT=5` / `AUTH_THROTTLE_TTL_SECONDS=60`, implementado en `auth.throttle.ts` | H1 |
 | `env.sample` / compose: throttle de reenvío de email 3 / 60 min | No implementado; no hay SMTP ni verificación | H1 |
 | `DEPLOY.md`: un solo usuario por instalación | Coherente con `getDefaultUserId()`, pero no está protegido | C1 |
 | `DEPLOY.md`: todo bajo `/api` | Correcto y verificado en producción | — |
@@ -186,3 +196,51 @@ No son fallas, son decisiones que cambian el tamaño del arreglo. Sin resolverla
 ---
 
 **Orden de arreglo recomendado:** decidir el punto 1 de la sección 6 → escribir los e2e que fallan (H4) → cerrar C1 → cerrar C2 → H1/H2 → H5 (borrar o montar) → el resto.
+
+---
+
+## 9. Intervención 2026-11-16 — multiusuario verificado y arreglos de integridad
+
+### 9.1 ¿La app sirve para varios usuarios? Sí, del lado del backend
+
+Verificado leyendo el código y corriendo la suite (`6 archivos / 24 tests`):
+
+- **Guardas por controller**, no por ruta: `tasks.controller.ts:8` y `calendar.controller.ts:7` tienen `@UseGuards(JwtAuthGuard)` a nivel de clase, y no existe ningún `@Public` ni `SetMetadata` que permita saltearlas.
+- **El dueño sale del token, nunca del body**: `CurrentUser` → `user.id` → primer argumento de cada método del servicio. `getDefaultUserId()` ya no existe en el repo.
+- **Lectura y escritura de filas ajenas**: `findFirst({ where: { id, userId } })` antes de tocar nada, y ajeno = inexistente = 404 (`tasks.service.ts:83`, `calendar.service.ts:95`). Un 403 distinguiría ids reales.
+- **Escrituras**: el `where` de `update`/`delete` sigue siendo `{ id }` pero sólo después de esa verificación, y `userId`/`id`/`createdAt` nunca se toman del DTO (`ValidationPipe` con `whitelist` + mapeo campo por campo).
+- **Sin superficie compartida**: `documents`, `folders`, `notepad` y `stats` no están importados en `app.module.ts`, así que no hay endpoint que lea datos de otro.
+- **Índices**: cada listado filtra por `userId`; sin índice era seq scan (M5, corregido).
+
+Residuos del lado del SPA cuando se cambia de cuenta **en el mismo navegador sin recargar** (corregidos acá):
+
+- `LibraryService` cacheaba en memoria las carpetas del usuario anterior; `login.ts` no llamaba a `reloadForUser()`. Ahora sí, con test en `library.spec.ts`.
+- `TimerService` guardaba el cronómetro en la clave global `dashboard_timer`, compartida entre cuentas. Ahora la clave incluye el id del usuario (`timer.service.spec.ts`).
+
+Sigue pendiente de decisión: JWT en `localStorage` (C2) y ausencia de revocación de sesión (M6).
+
+### 9.2 Arreglos aplicados en esta intervención
+
+| Archivo | Cambio |
+|---|---|
+| `calendar/dto/is-real-calendar-date.ts` (nuevo) | Valida la combinación día/mes/año: 31 de febrero deja de guardarse como 3 de marzo |
+| `calendar/dto/create-calendar-event.dto.ts` | `@IsRealCalendarDate()` en `day`, `@Max(9999)` en `year`, `@MaxLength(200)` en `title` |
+| `calendar/calendar.service.ts` | `Date.UTC` en vez de hora local del servidor; fuera el `.catch(() => null)` que se tragaba la falla del borrado |
+| `tasks/tasks.service.ts` | Borra el evento vinculado en la misma transacción; sella y limpia `completedAt`; `origin` lo decide el servidor |
+| `tasks/dto/create-task.dto.ts` | Fuera `origin`; `description` acotada a 2000 |
+| `auth/dto/register.dto.ts`, `users/dto/create-user.dto.ts` | `fullName` sin sólo espacios y acotado a 120; `email` a 254 |
+| `prisma/schema.prisma` + migración `20261116034701_add_owner_indexes` | `@@index([userId])` en `Task`, `CalendarEvent`, `Document`, `Folder` |
+| `frontend`: `tasks-api.service.ts`, `task.ts`, `dashboard.ts` | Dejan de mandar `origin`; el `source` de la tarea sale del servidor |
+| `test/tasks-calendar-integrity.e2e-spec.ts` (nuevo) | 8 tests que fallaban antes del cambio |
+| `calendar/dto/update-calendar-event.dto.ts` (nuevo) | Fecha como unidad: o vienen `day`+`month`+`year` o ninguno; media fecha es 400. `null` explícito también es 400 (`@ValidateIf(v !== undefined)` en cada campo, no `@IsOptional`, que dejaba pasar `{"title": null}` hasta la base y devolvía 500); el servicio además sólo construye la fecha si los tres son números, porque `Date.UTC(null, …)` da 1899-11-30 |
+| `calendar/calendar.service.ts` + controller | `PATCH /api/calendar/:id`: título y color del evento, y la tarea vinculada se renombra y se mueve con él en la misma transacción |
+| `test/calendar-update.e2e-spec.ts` (nuevo) | 7 tests: renombrar, recolorear, mover la fecha, fecha incompleta, fecha inexistente, ajeno → 404, sin token → 401 |
+| `test/calendar-update-contract.e2e-spec.ts` (nuevo) | 7 tests de borde: fecha toda `null` no corrompe las dos filas, `null` en título/color → 400 y no 500, mensajes exactos, evento sin tarea vinculada, rollback con trigger forzado, vínculo manipulado a tarea ajena, color-only leído de la base |
+
+### 9.3 Encontrado y no tocado (necesita decisión o es alcance aparte)
+
+- ~~**`PATCH /api/calendar/:id` no existe.**~~ **Resuelto (2026-11-16)** con la regla que faltaba decidir: el evento y su tarea son un recordatorio en dos filas, así que renombrar el evento reescribe `Task.description` (`Evento: <title>`) y mover la fecha actualiza `eventDate` y `Task.dueDate` en la misma transacción. Media fecha (`{day}` sin mes y año) es 400: adivinarla sería peor que rechazarla. Los eventos viejos cuyo `linkedTaskId` quedó en `NULL` se editan igual, sin tocar ninguna tarea.
+- **`forbidNonWhitelisted`**: no se activó. Hoy un campo desconocido se descarta en silencio; activarlo convierte eso en 400, que es un cambio de contrato para cualquier cliente externo.
+- **Throttle sólo en `/auth`**: `tasks` y `calendar` no tienen límite, y el storage es en memoria (por proceso, no por despliegue).
+- **`bcrypt` instalado y sin usar** (`auth/password.ts` usa `scrypt` de `node:crypto`).
+- H3 (helmet/logger/validar `FRONTEND_URL`), H5 (cuatro módulos muertos), H6 (filtros `month`/`year` ignorados), M6, M7, M8.

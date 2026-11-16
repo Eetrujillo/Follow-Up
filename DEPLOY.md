@@ -25,7 +25,8 @@ into the branch the gitlink points at.
 ## API path convention
 
 The backend mounts every route under `/api` (`app.setGlobalPrefix('api')` in
-`backend/src/main.ts`). The SPA calls the relative path `/api`
+`backend/src/app.setup.ts`, which `main.ts` applies so the e2e suite boots the
+same HTTP surface). The SPA calls the relative path `/api`
 (`src/app/shared/services/backend-api.config.ts`).
 
 Both halves of that decision are load-bearing:
