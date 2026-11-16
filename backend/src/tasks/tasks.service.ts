@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -21,7 +22,9 @@ export class TasksService {
           id: randomUUID(),
           userId,
           description: dto.description,
-          origin: dto.origin ?? 'DASHBOARD',
+          // Origin is a server decision: a `CALENDAR` task without its event is a
+          // row no page can explain, so only the calendar endpoint may mint one.
+          origin: 'DASHBOARD',
           dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         },
       });
@@ -42,7 +45,7 @@ export class TasksService {
   }
 
   async update(userId: string, taskId: string, dto: UpdateTaskDto) {
-    await this.assertOwnedBy(userId, taskId);
+    const task = await this.assertOwnedBy(userId, taskId);
 
     try {
       return await this.prisma.task.update({
@@ -50,6 +53,10 @@ export class TasksService {
         data: {
           ...(dto.description !== undefined && { description: dto.description }),
           ...(dto.isCompleted !== undefined && { isCompleted: dto.isCompleted }),
+          // completedAt records the moment the task became completed, so it is set
+          // on the transition and cleared on reopening, never on a repeated patch.
+          ...(dto.isCompleted === true && !task.isCompleted && { completedAt: new Date() }),
+          ...(dto.isCompleted === false && task.completedAt !== null && { completedAt: null }),
           ...(dto.dueDate !== undefined && { dueDate: dto.dueDate ? new Date(dto.dueDate) : null }),
         },
       });
@@ -62,8 +69,13 @@ export class TasksService {
     await this.assertOwnedBy(userId, taskId);
 
     try {
-      return await this.prisma.task.delete({
-        where: { id: taskId },
+      return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // The calendar relation is ON DELETE SET NULL, so deleting the task alone
+        // would leave a reminder pointing at nothing. The calendar service removes
+        // the pair in the other direction for the same reason.
+        await tx.calendarEvent.deleteMany({ where: { userId, linkedTaskId: taskId } });
+
+        return tx.task.delete({ where: { id: taskId } });
       });
     } catch (error) {
       rethrowPrismaError(error);

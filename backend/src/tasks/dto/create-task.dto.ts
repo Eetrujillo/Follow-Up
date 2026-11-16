@@ -1,18 +1,10 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsDateString } from 'class-validator';
-
-export enum TaskOrigin {
-  DASHBOARD = 'DASHBOARD',
-  CALENDAR = 'CALENDAR',
-}
+import { IsDateString, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateTaskDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(2000)
   description!: string;
-
-  @IsOptional()
-  @IsEnum(TaskOrigin)
-  origin?: TaskOrigin;
 
   @IsOptional()
   @IsDateString()
