@@ -22,9 +22,8 @@ export class TasksService {
           id: randomUUID(),
           userId,
           description: dto.description,
-          // Origin is a server decision: a `CALENDAR` task without its event is a
-          // row no page can explain, so only the calendar endpoint may mint one.
-          origin: 'DASHBOARD',
+          // The DTO accepts only this value, so nothing is rewritten silently.
+          origin: dto.origin ?? 'DASHBOARD',
           dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         },
       });
