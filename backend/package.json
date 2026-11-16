@@ -1,10 +1,10 @@
 {
   "scripts": {
     "build": "nest build",
-    "start": "tsx src/main.ts",
+    "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/src/main.js",
-    "test:e2e": "bash test/e2e-db.sh start && vitest run --config vitest.config.ts",
+    "test:e2e": "bash test/e2e-db.sh start && TZ=America/Lima vitest run --config vitest.config.ts",
     "db:e2e:start": "bash test/e2e-db.sh start",
     "db:e2e:stop": "bash test/e2e-db.sh stop"
   },
