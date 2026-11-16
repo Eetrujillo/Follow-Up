@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "01-instrumento.html",
+  "handoffs": {
+    "01-instrumento.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-16T05:58:51.878Z",
+      "startedAt": "2026-11-16T05:59:08.156Z",
+      "implementedAt": "2026-11-16T07:09:24.220Z",
+      "feature": "odd/tasks/ui-redesign.md",
+      "note": "7 páginas + shell sobre tokens. Build exit 0, suite 46/46, 0 controles perdidos."
+    }
+  }
+}

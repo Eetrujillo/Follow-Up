@@ -1,0 +1,28 @@
+{
+  "title": "Rediseño de interfaz — Follow-Up",
+  "brief": "Rediseño visual completo de las 7 páginas y el shell de la app Angular, conservando el minimalismo y la totalidad de los controles existentes, con feedback real en cada botón y un solo momento de motion por pantalla.",
+  "feature": "odd/tasks/ui-redesign.md",
+  "artboards": [
+    {
+      "file": "01-instrumento.html",
+      "title": "Instrumento",
+      "tradeoff": "Máxima densidad y calma: jerarquía por hairlines, escalones de fondo y cifras monoespaciadas. La más barata de implementar porque conserva la estructura actual; la menos cálida y con menos identidad propia.",
+      "width": 1280,
+      "height": 6961
+    },
+    {
+      "file": "02-capas-suaves.html",
+      "title": "Capas suaves",
+      "tradeoff": "Tactilidad y profundidad: superficies flotantes, radios generosos, tipografía serif del sistema en títulos y hover que eleva. Requiere sostener el contraste en cada escalón y cuidar no caer en el dashboard genérico.",
+      "width": 1280,
+      "height": 9193
+    },
+    {
+      "file": "03-riel-unico.html",
+      "title": "Riel único",
+      "tradeoff": "Mayor identidad y más espacio útil: el sidebar de 180px se reemplaza por un riel de iconos con panel flotante y el contenido va de borde a borde. Es la única que cambia la estructura, así que es la más cara en Angular, y el buscador deja de estar siempre visible.",
+      "width": 1280,
+      "height": 9416
+    }
+  ]
+}

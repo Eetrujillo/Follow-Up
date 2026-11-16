@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follow-up — Dirección B · Capas suaves</title>
+<!--
+  DIRECCIÓN B — «Capas suaves» (S5)
+  Tradeoff declarado: la jerarquía descansa en PROFUNDIDAD (sombras con offset y blur,
+  escalones de superficie) en lugar de líneas o bordes. Sereno y táctil; el contenido
+  flota sobre un canvas más oscuro. Coste: hay que sostener el contraste AA en cada
+  escalón de superficie y evitar el anidamiento de tarjetas (una sola capa de tarjeta
+  por panel; las listas son filas, no tarjetas).
+
+  Tokens: canvas #0b0c0e · surface-1 #15171a · surface-2 #1c1f23 · surface-3 #24282d
+  text-1 #f4f5f7 · text-2 #b0b6bd · text-3 #868d95 · accent #6aa4ff · ok #48d597 · danger #ff6b6b
+  Radios: 10px controles · 16px contenedores · 20px modales.
+  Los 5 colores de evento del calendario son DATOS del usuario (paleta de datos),
+  no roles de UI: los tres roles de acento (acción/éxito/peligro) siguen siendo uno solo cada uno.
+-->
+<style>
+  /* ---------- Tokens ---------- */
+  :root{
+    --canvas:#0b0c0e;
+    --surface-1:#15171a;
+    --surface-2:#1c1f23;
+    --surface-3:#24282d;
+    --text-1:#f4f5f7;
+    --text-2:#b0b6bd;
+    --text-3:#868d95;
+    --accent:#6aa4ff;
+    --accent-hover:#82b3ff;
+    --ok:#48d597;
+    --danger:#ff6b6b;
+    --hairline:rgba(244,245,247,.07);
+    --r-ctl:10px;
+    --r-card:16px;
+    --r-modal:20px;
+    --shadow-rest:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -8px rgba(0,0,0,.55);
+    --shadow-lift:0 2px 4px rgba(0,0,0,.4), 0 16px 36px -10px rgba(0,0,0,.65);
+    --ease:cubic-bezier(.22,1,.36,1);
+    --t-fast:180ms;
+    --t-med:220ms;
+    --t-moment:320ms;
+    /* paleta de datos de eventos (no son roles de UI) */
+    --ev-1:#6aa4ff; --ev-2:#48d597; --ev-3:#ff6b6b; --ev-4:#d9a35f; --ev-5:#b79df0;
+    --serif:ui-serif, Georgia, "Times New Roman", serif;
+  }
+
+  /* ---------- Base ---------- */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--canvas)}
+  body{
+    background:var(--canvas);
+    color:var(--text-1);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:56px 24px 140px;
+  }
+  /* superficies del navegador tematizadas */
+  ::selection{background:var(--accent);color:var(--canvas)}
+  input,textarea,[contenteditable]{caret-color:var(--accent)}
+  *{scrollbar-color:#3a3f46 transparent;scrollbar-width:thin}
+  *::-webkit-scrollbar{width:10px;height:10px}
+  *::-webkit-scrollbar-thumb{background:#3a3f46;border-radius:10px;border:2px solid transparent;background-clip:content-box}
+  *::-webkit-scrollbar-track{background:transparent}
+  a{color:var(--accent);text-decoration:underline;text-decoration-color:rgba(106,164,255,.35);text-underline-offset:3px;transition:color var(--t-fast) var(--ease)}
+  a:hover{color:var(--accent-hover)}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* foco visible en TODO control */
+  :where(a,button,input,textarea,[contenteditable],[role="button"],[tabindex]):focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  h1,h2,.page-title,.figure-num{font-family:var(--serif);font-weight:600;letter-spacing:.01em}
+  h2{font-size:24px;color:var(--text-1);margin:0 0 24px}
+  .measure{max-width:72ch}
+
+  .board-head{max-width:1280px;margin:0 auto 72px}
+  .board-head h1{font-size:34px;margin-bottom:8px}
+  .board-head p{color:var(--text-2);font-size:14px;max-width:72ch}
+
+  main{max-width:1280px;margin:0 auto}
+  section{margin-bottom:120px}
+  .screen{position:relative}
+
+  /* ---------- Componentes base ---------- */
+  .panel{
+    background:var(--surface-1);
+    border-radius:var(--r-card);
+    box-shadow:var(--shadow-rest);
+    padding:24px;
+  }
+  .card{
+    background:var(--surface-1);
+    border-radius:var(--r-card);
+    box-shadow:var(--shadow-rest);
+    transition:transform var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease);
+  }
+  .card--hover:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+  .card--hover:active{transform:translateY(-2px) scale(.985)}
+
+  button{font:inherit;color:inherit}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    border:none;border-radius:var(--r-ctl);
+    padding:9px 16px;font-size:14px;font-weight:600;
+    cursor:pointer;
+    transition:background-color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
+  }
+  .btn:active:not(:disabled){transform:scale(.985)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn--primary{background:var(--accent);color:var(--canvas)}
+  .btn--primary:hover:not(:disabled){background:var(--accent-hover)}
+  .btn--secondary{background:var(--surface-2);color:var(--text-1)}
+  .btn--secondary:hover:not(:disabled){background:var(--surface-3)}
+  .btn--ghost{background:transparent;color:var(--text-2)}
+  .btn--ghost:hover:not(:disabled){background:var(--surface-2);color:var(--text-1)}
+  .btn--danger{background:transparent;color:var(--danger)}
+  .btn--danger:hover:not(:disabled){background:rgba(255,107,107,.10)}
+  .btn svg{flex:none}
+
+  .icon-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;flex:none;
+    background:transparent;border:none;border-radius:var(--r-ctl);
+    color:var(--text-2);cursor:pointer;
+    transition:background-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease);
+  }
+  .icon-btn:hover{background:var(--surface-2);color:var(--text-1)}
+  .icon-btn:active{transform:scale(.985)}
+  .icon-btn--danger:hover{background:rgba(255,107,107,.10);color:var(--danger)}
+  .icon-btn--sm{width:28px;height:28px}
+
+  .field{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:var(--r-ctl);
+    color:var(--text-1);
+    font:inherit;
+    padding:10px 14px;
+    transition:border-color var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease);
+  }
+  .field::placeholder{color:var(--text-3)}
+  .field:hover{border-color:rgba(244,245,247,.14)}
+  .field:focus{outline:none;border-color:var(--accent)}
+
+  .lbl{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+
+  /* checkbox circular */
+  .cbx{
+    appearance:none;-webkit-appearance:none;
+    width:20px;height:20px;flex:none;
+    border:1.5px solid var(--text-3);border-radius:50%;
+    background:transparent;cursor:pointer;
+    display:inline-grid;place-items:center;
+    transition:background-color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease);
+  }
+  .cbx:hover{border-color:var(--text-2)}
+  .cbx:checked{background:var(--ok);border-color:var(--ok)}
+  .cbx:checked::after{
+    content:"";width:8px;height:4px;
+    border-left:1.8px solid var(--canvas);border-bottom:1.8px solid var(--canvas);
+    transform:rotate(-45deg) translate(0,-1px);
+  }
+
+  .divider{border:none;border-top:1px solid var(--hairline);margin:20px 0}
+
+  /* ---------- Iconos ---------- */
+  .ic{width:18px;height:18px;display:block;flex:none}
+  .ic--sm{width:15px;height:15px}
+
+  /* ---------- 1 · Shell + Dashboard ---------- */
+  .shell{display:flex;gap:24px;align-items:flex-start}
+  .sidebar{
+    width:200px;flex:none;
+    background:var(--surface-1);
+    border-radius:var(--r-card);
+    box-shadow:var(--shadow-rest);
+    padding:16px 12px;
+    display:flex;flex-direction:column;gap:4px;
+    min-height:640px;
+    transition:width var(--t-med) var(--ease);
+    overflow:hidden;
+  }
+  .sidebar.is-collapsed{width:60px}
+  .sidebar.is-collapsed .sb-label,.sidebar.is-collapsed .sb-search,.sidebar.is-collapsed .sb-results{display:none}
+  .sb-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 4px}
+  .sb-brand{font-family:var(--serif);font-weight:600;font-size:16px;white-space:nowrap}
+  .sb-search{position:relative;margin-bottom:8px}
+  .sb-search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);width:15px;height:15px}
+  .sb-search input{
+    width:100%;background:var(--surface-2);border:1px solid var(--hairline);
+    border-radius:var(--r-ctl);color:var(--text-1);font:inherit;font-size:13px;
+    padding:8px 30px 8px 32px;
+    transition:border-color var(--t-fast) var(--ease);
+  }
+  .sb-search input::placeholder{color:var(--text-3)}
+  .sb-search input:focus{outline:none;border-color:var(--accent)}
+  .sb-search .icon-btn{position:absolute;right:2px;top:50%;transform:translateY(-50%)}
+  .sb-results{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--hairline)}
+  .sb-result{
+    display:flex;flex-direction:column;gap:1px;align-items:flex-start;text-align:left;
+    background:transparent;border:none;border-radius:var(--r-ctl);
+    padding:7px 10px;cursor:pointer;color:var(--text-1);font:inherit;
+    transition:background-color var(--t-fast) var(--ease);
+  }
+  .sb-result:hover{background:var(--surface-2)}
+  .sb-result .r-type{font-size:12px;color:var(--accent)}
+  .sb-result .r-title{font-size:13px;font-weight:600}
+  .sb-result .r-sub{font-size:12px;color:var(--text-3)}
+  .sb-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+  .sb-link,.sb-logout{
+    display:flex;align-items:center;gap:10px;
+    text-decoration:none;border:none;background:transparent;
+    color:var(--text-2);font-size:13px;font-weight:500;
+    border-radius:var(--r-ctl);padding:9px 10px;cursor:pointer;
+    transition:background-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
+    white-space:nowrap;
+  }
+  .sb-link:hover,.sb-logout:hover{background:var(--surface-2);color:var(--text-1)}
+  .sb-link.is-active{background:var(--surface-2);color:var(--text-1);box-shadow:inset 0 0 0 1px var(--hairline)}
+  .sb-link.is-active .ic{color:var(--accent)}
+  .sidebar.is-collapsed .sb-link,.sidebar.is-collapsed .sb-logout{justify-content:center;padding:9px 0}
+  .sidebar--mini{width:60px;padding:16px 8px}
+  .sidebar--mini .sb-link,.sidebar--mini .sb-logout,.sidebar--mini .sb-top{justify-content:center;padding:9px 0}
+  .sb-logout{margin-top:auto;color:var(--danger)}
+  .sb-logout:hover{background:rgba(255,107,107,.10);color:var(--danger)}
+
+  .shell-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
+  .page-title{font-size:24px;margin:0}
+  .dash-panel{display:flex;flex-direction:column;gap:16px}
+  .composer{display:flex;gap:10px}
+  .task-list{list-style:none;display:flex;flex-direction:column}
+  .task{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 8px;border-radius:var(--r-ctl);
+    transition:background-color var(--t-fast) var(--ease);
+  }
+  .task:hover{background:var(--surface-2)}
+  .task .t-label{flex:1;min-width:0}
+  .task.is-done .t-label{color:var(--text-3);text-decoration:line-through}
+  .timer-row{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .timer{display:flex;align-items:center;gap:14px}
+  .timer-num{font-family:var(--serif);font-size:34px;font-variant-numeric:tabular-nums;color:var(--text-1)}
+  .donut-wrap{margin-left:auto;text-align:center}
+  .donut{width:104px;height:104px}
+  .donut-num{font-family:var(--serif);font-size:22px;fill:var(--text-1);font-variant-numeric:tabular-nums}
+  .donut-cap{font-size:12px;color:var(--text-3);margin-top:4px}
+  .wbars{display:flex;align-items:flex-end;gap:14px;height:96px;padding:0 4px}
+  .wbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;height:100%;align-items:center}
+  .wbar i{display:block;width:100%;max-width:34px;border-radius:4px;background:var(--surface-3)}
+  .wbar.is-hi i{background:var(--accent)}
+  .wbar b{font-size:12px;font-weight:500;color:var(--text-3)}
+  .activity{list-style:none;display:flex;flex-direction:column}
+  .activity li{
+    display:flex;align-items:baseline;gap:12px;
+    padding:8px;border-radius:var(--r-ctl);
+    font-size:13px;color:var(--text-2);
+    transition:background-color var(--t-fast) var(--ease);
+  }
+  .activity li:hover{background:var(--surface-2)}
+  .activity .a-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;align-self:center}
+  .activity time{margin-left:auto;font-size:12px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ---------- Capas (modales) ---------- */
+  .layer{
+    position:absolute;inset:-24px;z-index:20;
+    display:none;place-items:center;
+  }
+  .layer.is-open{display:grid}
+  .scrim{
+    position:absolute;inset:0;
+    background:rgba(4,5,6,.55);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    border-radius:var(--r-modal);
+    animation:scrimIn var(--t-moment) var(--ease);
+  }
+  @keyframes scrimIn{from{opacity:0}to{opacity:1}}
+  .dialog{
+    position:relative;z-index:1;
+    width:min(400px,90%);
+    background:var(--surface-2);
+    border-radius:var(--r-modal);
+    box-shadow:var(--shadow-lift);
+    padding:24px;
+    animation:dialogIn var(--t-moment) var(--ease);
+  }
+  @keyframes dialogIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .dialog h3{font-size:16px;font-weight:600;margin-bottom:16px}
+  .dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+  .dialog-actions .spacer{margin-right:auto}
+
+  /* ---------- 2 · Library ---------- */
+  .crumbs{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3);margin-bottom:16px}
+  .crumbs a{text-decoration:none;color:var(--text-2);transition:color var(--t-fast) var(--ease)}
+  .crumbs a:hover{color:var(--text-1);text-decoration:underline;text-underline-offset:3px}
+  .crumbs .sep{color:var(--text-3)}
+  .page-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .page-bar .page-title{margin-right:auto}
+  .folder-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+  .fcard{position:relative;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;border:none;text-align:left;font:inherit;color:var(--text-1)}
+  .fcard .ic{color:var(--accent);width:22px;height:22px}
+  .fcard .f-name{font-size:14px;font-weight:600}
+  .fcard .f-count{font-size:12px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .ftrash{position:absolute;top:10px;right:10px;opacity:0;transition:opacity var(--t-fast) var(--ease)}
+  .fcard:hover .ftrash,.fcard:focus-within .ftrash,.fcard.fcard--reveal .ftrash{opacity:1}
+  .doc-list{list-style:none;display:flex;flex-direction:column}
+  .doc-row{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;border-radius:var(--r-ctl);
+    cursor:pointer;border:none;background:transparent;text-align:left;font:inherit;color:var(--text-1);width:100%;
+    transition:background-color var(--t-fast) var(--ease);
+  }
+  .doc-row:hover{background:var(--surface-2)}
+  .doc-row .ic{color:var(--text-3)}
+  .doc-row .d-name{font-size:14px;font-weight:500;flex:1;min-width:0}
+  .doc-row .d-date{font-size:12px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .doc-row .ftrash{position:static;opacity:0}
+  .doc-row:hover .ftrash,.doc-row:focus-within .ftrash{opacity:1}
+
+  /* ---------- 3 · Calendar ---------- */
+  .cal-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .cal-head .page-title{margin:0 8px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .dow{font-size:12px;font-weight:600;color:var(--text-3);text-align:center;padding:6px 0}
+  .day{
+    min-height:88px;
+    background:var(--surface-2);
+    border-radius:var(--r-ctl);
+    padding:8px;
+    display:flex;flex-direction:column;gap:4px;
+    cursor:pointer;border:none;font:inherit;color:var(--text-1);
+    transition:background-color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease);
+  }
+  .day:hover{background:var(--surface-3);transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+  .day:active{transform:translateY(0) scale(.985)}
+  .day .d-num{font-size:13px;font-variant-numeric:tabular-nums;color:var(--text-2);align-self:flex-start}
+  .day.is-out .d-num{color:var(--text-3);opacity:.5}
+  .day.is-today{background:rgba(106,164,255,.12);box-shadow:inset 0 0 0 1.5px var(--accent)}
+  .day.is-today .d-num{color:var(--accent);font-weight:700}
+  .day .d-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    background:var(--surface-1);
+    border:none;border-radius:var(--r-ctl);
+    font-size:12px;color:var(--text-2);
+    padding:3px 8px;cursor:pointer;width:100%;text-align:left;font:inherit;
+    transition:background-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
+  }
+  .chip:hover{background:var(--surface-3);color:var(--text-1)}
+  .chip .c-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip-more{
+    background:transparent;border:none;border-radius:var(--r-ctl);
+    font-size:12px;color:var(--text-3);padding:2px 8px;cursor:pointer;text-align:left;font:inherit;width:fit-content;
+    transition:color var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease);
+  }
+  .chip-more:hover{color:var(--accent);background:var(--surface-1)}
+  .swatches{display:flex;gap:10px;align-items:center}
+  .swatch{
+    width:26px;height:26px;border-radius:50%;
+    border:none;cursor:pointer;padding:0;
+    transition:transform var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease);
+  }
+  .swatch:hover{transform:scale(1.1)}
+  .swatch:active{transform:scale(.985)}
+  .swatch.is-sel{box-shadow:0 0 0 2px var(--surface-2),0 0 0 4px var(--accent)}
+
+  /* ---------- 4 · Login y Signup ---------- */
+  .auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .auth-card{padding:24px;display:flex;flex-direction:column;gap:14px}
+  .auth-card h3{font-family:var(--serif);font-size:24px;font-weight:600}
+  .auth-card .auth-sub{font-size:13px;color:var(--text-3);margin-top:-6px}
+  .pw-wrap{position:relative}
+  .pw-wrap .field{padding-right:44px}
+  .pw-wrap .icon-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%)}
+  .pw-wrap .icon-btn:hover{transform:translateY(-50%);background:var(--surface-3)}
+  .auth-foot{font-size:13px;color:var(--text-3);margin-top:4px}
+
+  /* ---------- 5 · Notepad ---------- */
+  .np-toolbar{display:flex;align-items:center;gap:4px;padding:6px;background:var(--surface-2);border-radius:var(--r-ctl);margin-bottom:12px}
+  .np-toolbar .icon-btn.is-active{background:var(--surface-3);color:var(--accent)}
+  .np-toolbar .tb-sep{width:1px;height:20px;background:var(--hairline);margin:0 6px}
+  .np-editor{
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:var(--r-ctl);
+    min-height:220px;padding:16px;
+    font-size:14px;line-height:1.6;color:var(--text-1);
+    outline:none;
+    transition:border-color var(--t-fast) var(--ease);
+  }
+  .np-editor:focus{border-color:var(--accent)}
+  .np-editor:empty::before{content:attr(data-placeholder);color:var(--text-3)}
+  .np-editor p{margin:0 0 10px}
+  .np-actions{display:flex;gap:12px;margin-top:16px}
+  .alert-error{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(255,107,107,.08);
+    border-radius:var(--r-ctl);
+    padding:10px 14px;
+    font-size:13px;color:var(--danger);
+    margin-top:16px;
+  }
+  .alert-ok{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(72,213,151,.08);
+    border-radius:var(--r-ctl);
+    padding:10px 14px;
+    font-size:13px;color:var(--ok);
+  }
+
+  /* ---------- 6 · Statistics ---------- */
+  .stats-hero{display:flex;align-items:stretch;gap:0;padding:24px}
+  .hero-metric{flex:1.4;display:flex;flex-direction:column;gap:4px;justify-content:center}
+  .figure-num{font-size:34px;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1.15}
+  .hero-metric .hm-label{font-size:13px;color:var(--text-2)}
+  .hero-metric .hm-delta{font-size:13px;color:var(--ok);font-weight:600;font-variant-numeric:tabular-nums}
+  .hero-sep{width:1px;background:var(--hairline);margin:0 24px}
+  .hero-minis{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .mini-stat{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:10px 0}
+  .mini-stat + .mini-stat{border-top:1px solid var(--hairline)}
+  .mini-stat b{font-family:var(--serif);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+  .mini-stat span{font-size:13px;color:var(--text-3)}
+  .stats-chart{padding:0 24px 8px}
+  .stats-chart h3,.stats-progress h3{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:12px}
+  .progress{margin-top:20px;padding:0 24px 24px}
+  .pbar{margin-bottom:14px}
+  .pbar .p-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);margin-bottom:6px;font-variant-numeric:tabular-nums}
+  .pbar .p-track{height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden}
+  .pbar .p-fill{height:100%;background:var(--accent);border-radius:4px}
+
+  /* ---------- 7 · Índice de controles ---------- */
+  .idx-group{margin-bottom:24px;padding:24px}
+  .idx-group > h3{font-size:16px;font-weight:600;margin-bottom:8px}
+  .idx-group > .idx-note{font-size:12px;color:var(--text-3);margin-bottom:8px}
+  .idx-row{
+    display:flex;align-items:center;gap:20px;
+    padding:12px 0;border-top:1px solid var(--hairline);
+  }
+  .idx-row:first-of-type{border-top:none}
+  .idx-demo{flex:none;min-width:340px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .idx-meta{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .idx-name{font-size:13px;font-weight:600;color:var(--text-1)}
+  .idx-act{font-size:12px;color:var(--text-3)}
+  .idx-empty{
+    border:1.5px dashed var(--hairline);
+    border-radius:var(--r-card);
+    padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px;
+    color:var(--text-3);font-size:13px;
+  }
+
+  /* ---------- Motion: reduce ---------- */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation:none !important;
+      transition:none !important;
+      scroll-behavior:auto !important;
+    }
+    .card--hover:hover,.day:hover{transform:none;box-shadow:var(--shadow-rest)}
+    .btn:active:not(:disabled),.icon-btn:active,.swatch:active,.day:active{transform:none}
+    .scrim{backdrop-filter:none;-webkit-backdrop-filter:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Sprite de iconos SVG autorados: trazo 1.5px, grilla 24, caps/joins redondeados -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <g id="i-chevron-left"><path d="M14.5 6 8.5 12l6 6"/></g>
+    <g id="i-chevron-right"><path d="M9.5 6l6 6-6 6"/></g>
+    <g id="i-chevrons-left"><path d="M11 7l-5 5 5 5M18 7l-5 5 5 5"/></g>
+    <g id="i-chevrons-right"><path d="M13 7l5 5-5 5M6 7l5 5-5 5"/></g>
+    <g id="i-search"><circle cx="11" cy="11" r="6"/><path d="M15.6 15.6 20 20"/></g>
+    <g id="i-x"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="i-plus"><path d="M12 5v14M5 12h14"/></g>
+    <g id="i-trash"><path d="M4 7h16M10 7V5h4v2M6.5 7l.9 13h9.2l.9-13M10 11v5.5M14 11v5.5"/></g>
+    <g id="i-play"><path d="M9 6v12l9-6z"/></g>
+    <g id="i-pause"><path d="M9.5 6v12M14.5 6v12"/></g>
+    <g id="i-reset"><path d="M4 5v6h6"/><path d="M4.7 11a8 8 0 1 0 2.4-5.6L4.2 8.2"/></g>
+    <g id="i-eye"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></g>
+    <g id="i-eye-off"><path d="M4 4l16 16M10.6 6.1A9.8 9.8 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17.5 17.5 0 0 1-3 3.7M6.6 6.9A16.9 16.9 0 0 0 2.5 12S6 18.5 12 18.5a9.6 9.6 0 0 0 3.4-.6"/><path d="M9.9 10.1a3 3 0 0 0 4.1 4.1"/></g>
+    <g id="i-logout"><path d="M9 4H5v16h4M13 8l4 4-4 4M17 12H8"/></g>
+    <g id="i-home"><path d="M5 10.5 12 4l7 6.5M6.5 9.5V20h11V9.5"/></g>
+    <g id="i-books"><path d="M4 4h4v16H4zM10 4h4v16h-4z"/><path d="M16.6 5.4l3.6 13.6"/></g>
+    <g id="i-cal"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></g>
+    <g id="i-bars-chart"><path d="M5 20v-7M12 20V6M19 20v-4M3.5 20h17"/></g>
+    <g id="i-note"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></g>
+    <g id="i-folder"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></g>
+    <g id="i-doc"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></g>
+    <g id="i-save"><path d="M6 4h12v17l-6-4-6 4z"/></g>
+    <g id="i-spark"><path d="M12 4l1.7 4.3L18 10l-4.3 1.7L12 16l-1.7-4.3L6 10l4.3-1.7zM18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></g>
+    <g id="i-alert"><path d="M12 4 3 20h18zM12 10.5v4M12 17.3v.1"/></g>
+    <g id="i-check-circle"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></g>
+    <g id="i-edit"><path d="M4 20h4L20 8l-4-4L4 16zM13.5 6.5l4 4"/></g>
+    <g id="i-bold"><path d="M7 4h6a4 4 0 0 1 0 8H7zM7 12h7a4.5 4.5 0 0 1 0 9H7z" stroke-linejoin="round"/></g>
+    <g id="i-italic"><path d="M19 4h-9M14 20H5M15 4 9 20"/></g>
+    <g id="i-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16"/></g>
+  </defs>
+</svg>
+
+<header class="board-head">
+  <h1>Capas suaves — dirección B</h1>
+  <p>El contenido flota sobre un canvas más oscuro y la profundidad es el sistema, no la línea.
+     Tradeoff: jerarquía por sombra y escalones de superficie; exige sostener el contraste en cada
+     escalón y evitar tarjetas dentro de tarjetas (las listas son filas).</p>
+</header>
+
+<main>
+
+  <!-- ══════════════════ 1 · SHELL + DASHBOARD ══════════════════ -->
+  <section aria-labelledby="sec-shell">
+    <h2 id="sec-shell">Shell + Dashboard</h2>
+    <div class="screen shell">
+      <!-- sidebar expandido -->
+      <aside class="sidebar" id="demo-sidebar" aria-label="Barra lateral">
+        <div class="sb-top">
+          <button class="icon-btn" id="demo-sidebar-toggle" aria-label="Colapsar barra lateral">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevrons-left"/></svg>
+          </button>
+          <span class="sb-brand">Follow-up</span>
+        </div>
+        <div class="sb-search">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><use href="#i-search"/></svg>
+          <input type="text" placeholder="Buscar..." value="react" aria-label="Buscar en Follow-up">
+          <button class="icon-btn icon-btn--sm" aria-label="Limpiar búsqueda">
+            <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg>
+          </button>
+        </div>
+        <div class="sb-results" aria-label="Resultados de búsqueda">
+          <button class="sb-result">
+            <span class="r-type">Documento</span>
+            <span class="r-title">Apuntes de React</span>
+            <span class="r-sub">Universidad · 12 mar 2025</span>
+          </button>
+          <button class="sb-result">
+            <span class="r-type">Evento</span>
+            <span class="r-title">Sesión de estudio React</span>
+            <span class="r-sub">Calendario · mar 18</span>
+          </button>
+        </div>
+        <nav class="sb-nav" aria-label="Navegación principal">
+          <a class="sb-link is-active" href="#" aria-current="page">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg>
+            <span class="sb-label">Panel Principal</span>
+          </a>
+          <a class="sb-link" href="#">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-books"/></svg>
+            <span class="sb-label">Biblioteca</span>
+          </a>
+          <a class="sb-link" href="#">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg>
+            <span class="sb-label">Calendario</span>
+          </a>
+          <a class="sb-link" href="#">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bars-chart"/></svg>
+            <span class="sb-label">Estadisticas</span>
+          </a>
+          <a class="sb-link" href="#">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-note"/></svg>
+            <span class="sb-label">Bloc de Notas</span>
+          </a>
+        </nav>
+        <button class="sb-logout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-logout"/></svg>
+          <span class="sb-label">Cerrar sesion</span>
+        </button>
+      </aside>
+
+      <!-- franja: sidebar colapsado -->
+      <aside class="sidebar sidebar--mini" aria-label="Vista de barra lateral colapsada">
+        <div class="sb-top">
+          <button class="icon-btn" aria-label="Expandir barra lateral">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevrons-right"/></svg>
+          </button>
+        </div>
+        <nav class="sb-nav" aria-label="Navegación (colapsada)">
+          <a class="sb-link is-active" href="#" aria-label="Panel Principal"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg></a>
+          <a class="sb-link" href="#" aria-label="Biblioteca"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-books"/></svg></a>
+          <a class="sb-link" href="#" aria-label="Calendario"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cal"/></svg></a>
+          <a class="sb-link" href="#" aria-label="Estadisticas"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bars-chart"/></svg></a>
+          <a class="sb-link" href="#" aria-label="Bloc de Notas"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-note"/></svg></a>
+        </nav>
+        <button class="sb-logout" aria-label="Cerrar sesion">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-logout"/></svg>
+        </button>
+      </aside>
+
+      <!-- contenido -->
+      <div class="shell-main">
+        <header>
+          <p class="page-title">Panel Principal</p>
+        </header>
+        <div class="panel dash-panel">
+          <div class="composer">
+            <input type="text" class="field" placeholder="Nueva tarea..." aria-label="Nueva tarea">
+            <button class="btn btn--primary" aria-label="Agregar tarea">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-plus"/></svg>
+            </button>
+          </div>
+
+          <ul class="task-list">
+            <li class="task is-done">
+              <input type="checkbox" class="cbx" checked aria-label="Tarea completada: Comprar material de estudio">
+              <span class="t-label">Comprar material de estudio</span>
+              <button class="icon-btn icon-btn--sm icon-btn--danger" aria-label="Eliminar tarea: Comprar material de estudio">
+                <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg>
+              </button>
+            </li>
+            <li class="task">
+              <input type="checkbox" class="cbx" aria-label="Tarea: Terminar la maqueta del panel">
+              <span class="t-label">Terminar la maqueta del panel</span>
+              <button class="icon-btn icon-btn--sm icon-btn--danger" aria-label="Eliminar tarea: Terminar la maqueta del panel">
+                <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg>
+              </button>
+            </li>
+            <li class="task">
+              <input type="checkbox" class="cbx" aria-label="Tarea: Responder correos del equipo">
+              <span class="t-label">Responder correos del equipo</span>
+              <button class="icon-btn icon-btn--sm icon-btn--danger" aria-label="Eliminar tarea: Responder correos del equipo">
+                <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg>
+              </button>
+            </li>
+          </ul>
+
+          <hr class="divider">
+
+          <div class="timer-row">
+            <div class="timer">
+              <span class="timer-num">25:00</span>
+              <button class="icon-btn" aria-label="Iniciar temporizador">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-play"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Reiniciar temporizador a 25:00">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-reset"/></svg>
+              </button>
+            </div>
+            <div class="donut-wrap">
+              <svg class="donut" viewBox="0 0 96 96" role="img" aria-label="Productividad semanal: 72 por ciento">
+                <circle cx="48" cy="48" r="40" fill="none" stroke="var(--surface-3)" stroke-width="9"/>
+                <circle cx="48" cy="48" r="40" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round"
+                        stroke-dasharray="181 251.3" transform="rotate(-90 48 48)"/>
+                <text x="48" y="54" text-anchor="middle" class="donut-num">72%</text>
+              </svg>
+              <p class="donut-cap">Productividad</p>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="wbars num" role="img" aria-label="Minutos estudiados por día esta semana; jueves fue el día más alto">
+            <div class="wbar"><i style="height:40%"></i><b>L</b></div>
+            <div class="wbar"><i style="height:65%"></i><b>M</b></div>
+            <div class="wbar"><i style="height:30%"></i><b>X</b></div>
+            <div class="wbar is-hi"><i style="height:82%"></i><b>J</b></div>
+            <div class="wbar"><i style="height:55%"></i><b>V</b></div>
+            <div class="wbar"><i style="height:20%"></i><b>S</b></div>
+            <div class="wbar"><i style="height:45%"></i><b>D</b></div>
+          </div>
+
+          <hr class="divider">
+
+          <h3 style="font-size:13px;font-weight:600;color:var(--text-2)">Actividad reciente</h3>
+          <ul class="activity">
+            <li><span class="a-dot" aria-hidden="true"></span>Completaste «Repaso de álgebra»<time>hace 2 h</time></li>
+            <li><span class="a-dot" aria-hidden="true"></span>Creaste el documento «Apuntes de React»<time>ayer</time></li>
+            <li><span class="a-dot" aria-hidden="true"></span>Estudiaste 3,5 h el martes 11<time>mar 11</time></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 2 · LIBRARY ══════════════════ -->
+  <section aria-labelledby="sec-library">
+    <h2 id="sec-library">Library</h2>
+    <div class="screen panel">
+      <nav class="crumbs" aria-label="Migas de pan">
+        <a href="#">Follow-up</a><span class="sep" aria-hidden="true">/</span>
+        <a href="#" aria-current="page">Biblioteca</a>
+      </nav>
+
+      <div class="page-bar">
+        <p class="page-title">Biblioteca</p>
+        <button class="btn btn--primary" id="btn-nueva-carpeta">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-plus"/></svg>
+          Nueva carpeta
+        </button>
+      </div>
+
+      <div class="folder-grid">
+        <button class="card card--hover fcard" aria-label="Abrir carpeta React, 12 documentos">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-folder"/></svg>
+          <span class="f-name">React</span>
+          <span class="f-count num">12 documentos</span>
+          <span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar carpeta React" onclick="event.stopPropagation()">
+            <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+          </span>
+        </button>
+        <button class="card card--hover fcard fcard--reveal" aria-label="Abrir carpeta Universidad, 8 documentos">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-folder"/></svg>
+          <span class="f-name">Universidad</span>
+          <span class="f-count num">8 documentos</span>
+          <span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar carpeta Universidad" onclick="event.stopPropagation()">
+            <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+          </span>
+        </button>
+        <button class="card card--hover fcard" aria-label="Abrir carpeta Trabajo, 5 documentos">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-folder"/></svg>
+          <span class="f-name">Trabajo</span>
+          <span class="f-count num">5 documentos</span>
+          <span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar carpeta Trabajo" onclick="event.stopPropagation()">
+            <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+          </span>
+        </button>
+        <button class="card card--hover fcard" aria-label="Abrir carpeta Ideas, 3 documentos">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-folder"/></svg>
+          <span class="f-name">Ideas</span>
+          <span class="f-count num">3 documentos</span>
+          <span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar carpeta Ideas" onclick="event.stopPropagation()">
+            <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <ul class="doc-list" aria-label="Documentos recientes">
+        <li>
+          <button class="doc-row" aria-label="Abrir documento Apuntes de React, creado el 12 de marzo de 2025">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
+            <span class="d-name">Apuntes de React</span>
+            <span class="d-date">Creado el 12 mar 2025</span>
+            <span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar documento Apuntes de React" onclick="event.stopPropagation()">
+              <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+            </span>
+          </button>
+        </li>
+        <li>
+          <button class="doc-row" aria-label="Abrir documento Plan semanal, creado el 9 de marzo de 2025">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
+            <span class="d-name">Plan semanal</span>
+            <span class="d-date">Creado el 9 mar 2025</span>
+            <span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar documento Plan semanal" onclick="event.stopPropagation()">
+              <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+            </span>
+          </button>
+        </li>
+      </ul>
+
+      <!-- modal «Nueva carpeta» ABIERTO -->
+      <div class="layer is-open" id="modal-carpeta">
+        <div class="scrim" data-scrim></div>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="mc-title">
+          <h3 id="mc-title">Nueva carpeta</h3>
+          <input type="text" class="field" placeholder="Nombre de la carpeta" aria-label="Nombre de la carpeta">
+          <div class="dialog-actions">
+            <button class="btn btn--ghost" data-close>Cancelar</button>
+            <button class="btn btn--primary" data-close>Crear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 3 · CALENDAR ══════════════════ -->
+  <section aria-labelledby="sec-calendar">
+    <h2 id="sec-calendar">Calendar</h2>
+    <div class="screen panel">
+      <div class="cal-head">
+        <button class="icon-btn" aria-label="Mes anterior">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-left"/></svg>
+        </button>
+        <p class="page-title">Marzo 2025</p>
+        <button class="icon-btn" aria-label="Mes siguiente">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-right"/></svg>
+        </button>
+      </div>
+
+      <div class="cal-grid num" role="grid" aria-label="Marzo 2025">
+        <span class="dow">L</span><span class="dow">M</span><span class="dow">X</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span>
+
+        <div class="day is-out" tabindex="0" role="gridcell" aria-label="26 de febrero"><span class="d-num">26</span></div>
+        <div class="day is-out" tabindex="0" role="gridcell" aria-label="27 de febrero"><span class="d-num">27</span></div>
+        <div class="day is-out" tabindex="0" role="gridcell" aria-label="28 de febrero"><span class="d-num">28</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="1 de marzo"><span class="d-num">1</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="2 de marzo"><span class="d-num">2</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="3 de marzo"><span class="d-num">3</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="4 de marzo"><span class="d-num">4</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="5 de marzo"><span class="d-num">5</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="6 de marzo"><span class="d-num">6</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="7 de marzo"><span class="d-num">7</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="8 de marzo"><span class="d-num">8</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="9 de marzo"><span class="d-num">9</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="10 de marzo"><span class="d-num">10</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="11 de marzo"><span class="d-num">11</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="12 de marzo"><span class="d-num">12</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="13 de marzo"><span class="d-num">13</span></div>
+        <div class="day is-today" tabindex="0" role="gridcell" aria-label="Hoy, 14 de marzo"><span class="d-num">14</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="15 de marzo"><span class="d-num">15</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="16 de marzo"><span class="d-num">16</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="17 de marzo"><span class="d-num">17</span></div>
+        <div class="day" id="celda-demo" tabindex="0" role="gridcell" aria-label="18 de marzo: 2 eventos visibles, 2 más" aria-haspopup="dialog">
+          <span class="d-num">18</span>
+          <div class="d-body">
+            <button class="chip"><span class="c-dot" style="background:var(--ev-1)"></span><span>Sesión de estudio</span></button>
+            <button class="chip"><span class="c-dot" style="background:var(--ev-3)"></span><span>Entrega parcial</span></button>
+            <button class="chip-more num">+2 más</button>
+          </div>
+        </div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="19 de marzo"><span class="d-num">19</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="20 de marzo"><span class="d-num">20</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="21 de marzo"><span class="d-num">21</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="22 de marzo"><span class="d-num">22</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="23 de marzo"><span class="d-num">23</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="24 de marzo"><span class="d-num">24</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="25 de marzo"><span class="d-num">25</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="26 de marzo"><span class="d-num">26</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="27 de marzo"><span class="d-num">27</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="28 de marzo"><span class="d-num">28</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="29 de marzo"><span class="d-num">29</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="30 de marzo"><span class="d-num">30</span></div>
+        <div class="day" tabindex="0" role="gridcell" aria-label="31 de marzo"><span class="d-num">31</span></div>
+        <div class="day is-out" tabindex="0" role="gridcell" aria-label="1 de abril"><span class="d-num">1</span></div>
+      </div>
+
+      <!-- modal de evento ABIERTO -->
+      <div class="layer is-open" id="modal-evento">
+        <div class="scrim" data-scrim></div>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="me-title">
+          <h3 id="me-title">Editar evento</h3>
+          <input type="text" class="field" placeholder="Ej: Estudiar React" value="Sesión de estudio" aria-label="Título del evento">
+          <div style="margin-top:16px">
+            <span class="lbl" id="me-colors">Color</span>
+            <div class="swatches" role="radiogroup" aria-labelledby="me-colors">
+              <button class="swatch is-sel" role="radio" aria-checked="true" aria-label="Color azul" style="background:var(--ev-1)"></button>
+              <button class="swatch" role="radio" aria-checked="false" aria-label="Color verde" style="background:var(--ev-2)"></button>
+              <button class="swatch" role="radio" aria-checked="false" aria-label="Color rojo" style="background:var(--ev-3)"></button>
+              <button class="swatch" role="radio" aria-checked="false" aria-label="Color ámbar" style="background:var(--ev-4)"></button>
+              <button class="swatch" role="radio" aria-checked="false" aria-label="Color lila" style="background:var(--ev-5)"></button>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button class="btn btn--danger spacer" data-close>
+              <svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+              Eliminar
+            </button>
+            <button class="btn btn--ghost" data-close>Cancelar</button>
+            <button class="btn btn--primary" data-close>Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 4 · LOGIN Y SIGNUP ══════════════════ -->
+  <section aria-labelledby="sec-auth">
+    <h2 id="sec-auth">Login y Signup</h2>
+    <div class="screen auth-grid">
+      <form class="card auth-card" aria-labelledby="login-title">
+        <h3 id="login-title">Iniciar sesion</h3>
+        <p class="auth-sub">Bienvenido de nuevo a tu espacio de estudio.</p>
+        <div>
+          <label class="lbl" for="l-email">Email</label>
+          <input type="email" class="field" id="l-email" placeholder="tu@correo.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="lbl" for="l-pass">Contraseña</label>
+          <div class="pw-wrap">
+            <input type="password" class="field" id="l-pass" placeholder="Tu contraseña" autocomplete="current-password">
+            <button type="button" class="icon-btn" aria-label="Mostrar contraseña">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-eye"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary" style="justify-content:center">Iniciar sesion</button>
+        <p class="auth-foot">¿No tenés cuenta? <a href="#">Registrate</a></p>
+      </form>
+
+      <form class="card auth-card" aria-labelledby="signup-title">
+        <h3 id="signup-title">Crear cuenta</h3>
+        <p class="auth-sub">Organizá tu estudio en un solo lugar.</p>
+        <div>
+          <label class="lbl" for="s-name">Nombre</label>
+          <input type="text" class="field" id="s-name" placeholder="Tu nombre" autocomplete="name">
+        </div>
+        <div>
+          <label class="lbl" for="s-email">Email</label>
+          <input type="email" class="field" id="s-email" placeholder="tu@correo.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="lbl" for="s-pass">Contraseña</label>
+          <input type="password" class="field" id="s-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+        </div>
+        <div>
+          <label class="lbl" for="s-pass2">Confirmar contraseña</label>
+          <input type="password" class="field" id="s-pass2" placeholder="Repetí la contraseña" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn--primary" style="justify-content:center">Crear cuenta</button>
+        <p class="auth-foot">¿Ya tenés cuenta? <a href="#">Inicia sesion</a></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 5 · NOTEPAD ══════════════════ -->
+  <section aria-labelledby="sec-notepad">
+    <h2 id="sec-notepad">Notepad</h2>
+    <div class="screen panel">
+      <div class="np-toolbar" role="toolbar" aria-label="Formato del texto">
+        <button class="icon-btn is-active" aria-label="Negrita" aria-pressed="true">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-bold"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Cursiva" aria-pressed="false">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-italic"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Subrayado" aria-pressed="false">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-underline"/></svg>
+        </button>
+        <span class="tb-sep" aria-hidden="true"></span>
+        <span style="font-size:12px;color:var(--text-3)">Nota sin guardar</span>
+      </div>
+
+      <div class="np-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Cuerpo de la nota">
+        <p><strong>Ideas para la clase del viernes</strong></p>
+        <p>Repasar los hooks básicos y dejar preparado el ejemplo de <em>useState</em> con la lista de tareas.</p>
+        <p>Pendiente: buscar dos ejercicios de práctica y subirlos a la carpeta <u>React</u> de la biblioteca.</p>
+      </div>
+
+      <div class="np-actions">
+        <button class="btn btn--primary">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-save"/></svg>
+          Guardar en Biblioteca
+        </button>
+        <button class="btn btn--secondary">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg>
+          Crear tareas con IA
+        </button>
+      </div>
+
+      <div class="alert-error" role="alert">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-alert"/></svg>
+        No se pudieron crear las tareas con IA. Revisá tu conexión e intentá de nuevo.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 6 · STATISTICS ══════════════════ -->
+  <section aria-labelledby="sec-stats">
+    <h2 id="sec-stats">Estadisticas</h2>
+    <div class="screen">
+      <div class="panel" style="padding:0">
+        <div class="stats-hero">
+          <div class="hero-metric">
+            <span class="figure-num">12,4 h</span>
+            <span class="hm-label">Tiempo de estudio esta semana</span>
+            <span class="hm-delta num">+8% vs semana anterior</span>
+          </div>
+          <div class="hero-sep" aria-hidden="true"></div>
+          <div class="hero-minis num">
+            <div class="mini-stat"><b>32</b><span>tareas completadas</span></div>
+            <div class="mini-stat"><b>18</b><span>documentos creados</span></div>
+            <div class="mini-stat"><b>5</b><span>sesiones con temporizador</span></div>
+          </div>
+        </div>
+        <hr class="divider" style="margin:0">
+        <div class="stats-chart">
+          <h3>Minutos por día</h3>
+          <div class="wbars num" style="height:120px" role="img" aria-label="Minutos estudiados por día; jueves fue el día más alto con 96 minutos">
+            <div class="wbar"><i style="height:42%"></i><b>L</b></div>
+            <div class="wbar"><i style="height:68%"></i><b>M</b></div>
+            <div class="wbar"><i style="height:34%"></i><b>X</b></div>
+            <div class="wbar is-hi"><i style="height:96%"></i><b>J</b></div>
+            <div class="wbar"><i style="height:58%"></i><b>V</b></div>
+            <div class="wbar"><i style="height:22%"></i><b>S</b></div>
+            <div class="wbar"><i style="height:48%"></i><b>D</b></div>
+          </div>
+        </div>
+        <hr class="divider" style="margin:0">
+        <div class="progress">
+          <div class="pbar">
+            <div class="p-meta"><span>Meta semanal de estudio</span><span>12,4 / 15 h</span></div>
+            <div class="p-track" role="img" aria-label="Progreso de meta semanal: 83 por ciento"><div class="p-fill" style="width:83%"></div></div>
+          </div>
+          <div class="pbar">
+            <div class="p-meta"><span>Documentos en Biblioteca</span><span>28 / 40</span></div>
+            <div class="p-track" role="img" aria-label="Progreso de biblioteca: 70 por ciento"><div class="p-fill" style="width:70%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 7 · ÍNDICE DE CONTROLES ══════════════════ -->
+  <section aria-labelledby="sec-index">
+    <h2 id="sec-index">Índice de controles</h2>
+
+    <!-- Shell / sidebar -->
+    <div class="panel idx-group">
+      <h3>Shell · Sidebar</h3>
+      <div class="idx-row">
+        <div class="idx-demo"><button class="icon-btn" aria-label="Colapsar barra lateral"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevrons-left"/></svg></button><button class="icon-btn" aria-label="Expandir barra lateral"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevrons-right"/></svg></button></div>
+        <div class="idx-meta"><span class="idx-name">Botón icono colapsar/expandir</span><span class="idx-act">toggleSidebar()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="sb-search" style="width:220px;margin:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" class="ic ic--sm" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3)"><use href="#i-search"/></svg>
+            <input type="text" placeholder="Buscar..." value="react" aria-label="Buscar en Follow-up">
+            <button class="icon-btn icon-btn--sm" aria-label="Limpiar búsqueda"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg></button>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Buscador + limpiar «x» (visible con texto)</span><span class="idx-act">onSearch() · clearSearch()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><button class="sb-result" style="width:220px"><span class="r-type">Documento</span><span class="r-title">Apuntes de React</span><span class="r-sub">Universidad · 12 mar 2025</span></button></div>
+        <div class="idx-meta"><span class="idx-name">Fila resultado (tipo / título / subtítulo)</span><span class="idx-act">goToResult(result)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <a class="sb-link is-active" href="#" style="width:auto" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg><span class="sb-label">Panel Principal</span></a>
+          <a class="sb-link" href="#" style="width:auto"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-books"/></svg><span class="sb-label">Biblioteca</span></a>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Links de navegación ×5 (activo visible; también Calendario, Estadisticas, Bloc de Notas)</span><span class="idx-act">routerLink + estado activo</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><button class="sb-logout" style="width:auto;margin:0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-logout"/></svg><span class="sb-label">Cerrar sesion</span></button></div>
+        <div class="idx-meta"><span class="idx-name">Cerrar sesion</span><span class="idx-act">logout()</span></div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="panel idx-group">
+      <h3>Dashboard</h3>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <input type="text" class="field" style="width:200px" placeholder="Nueva tarea..." aria-label="Nueva tarea">
+          <button class="btn btn--primary" aria-label="Agregar tarea"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-plus"/></svg></button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Input «Nueva tarea...» + botón «+»</span><span class="idx-act">addTask() (Enter y click)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <input type="checkbox" class="cbx" checked aria-label="Tarea completada">
+          <input type="checkbox" class="cbx" aria-label="Tarea pendiente">
+          <button class="icon-btn icon-btn--sm icon-btn--danger" aria-label="Eliminar tarea"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Checkbox por tarea (completada tacha) + eliminar «x»</span><span class="idx-act">onTaskChange(task) · deleteTask(task.id)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="icon-btn" aria-label="Iniciar temporizador"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-play"/></svg></button>
+          <button class="icon-btn" aria-label="Pausar temporizador"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-pause"/></svg></button>
+          <button class="icon-btn" aria-label="Reiniciar temporizador"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-reset"/></svg></button>
+          <span class="timer-num num" style="font-size:24px">25:00</span>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Temporizador: play/pausa y reinicio</span><span class="idx-act">toggleTimer() · stopTimer()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo" style="gap:20px">
+          <svg class="donut" style="width:64px;height:64px" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="40" fill="none" stroke="var(--surface-3)" stroke-width="9"/><circle cx="48" cy="48" r="40" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round" stroke-dasharray="181 251.3" transform="rotate(-90 48 48)"/></svg>
+          <div class="wbars num" style="height:56px;width:180px" aria-hidden="true"><div class="wbar"><i style="height:50%"></i><b>L</b></div><div class="wbar is-hi"><i style="height:85%"></i><b>J</b></div></div>
+          <ul class="activity" style="width:200px"><li><span class="a-dot"></span>Actividad reciente<time>hace 2 h</time></li></ul>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Lecturas: dona, barras semanales, actividad</span><span class="idx-act">solo lectura — sin controles</span></div>
+      </div>
+    </div>
+
+    <!-- Library -->
+    <div class="panel idx-group">
+      <h3>Library</h3>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <nav class="crumbs" style="margin:0" aria-label="Demo migas"><a href="#">Follow-up</a><span class="sep">/</span><a href="#">Biblioteca</a><span class="sep">/</span><a href="#" aria-current="page">React</a></nav>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Migas con acción (volver a carpetas/documentos)</span><span class="idx-act">view='folders' / 'documents'</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><nav class="crumbs" style="margin:0" aria-label="Demo miga documento"><a href="#">Biblioteca</a><span class="sep">/</span><span style="color:var(--text-2)">Apuntes de React</span></nav></div>
+        <div class="idx-meta"><span class="idx-name">Miga de documento (sin acción)</span><span class="idx-act">—</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--primary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-plus"/></svg>Nueva carpeta</button>
+          <button class="btn btn--secondary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-left"/></svg>Volver</button>
+          <button class="btn btn--secondary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-plus"/></svg>Nuevo documento</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Acciones de vista</span><span class="idx-act">openFolderModal() · goBack() · openDocModal()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="card card--hover fcard" style="width:200px" aria-label="Abrir carpeta React, 12 documentos"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><use href="#i-folder"/></svg><span class="f-name">React</span><span class="f-count num">12 documentos</span><span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar carpeta React" style="opacity:1;position:static"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg></span></button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Tarjeta carpeta + papelera (reveal en hover y :focus-within)</span><span class="idx-act">openFolder(folder) · deleteFolder(id, $event)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="doc-row" style="width:320px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg><span class="d-name">Apuntes de React</span><span class="d-date">Creado el 12 mar 2025</span><span class="ftrash icon-btn icon-btn--sm icon-btn--danger" role="button" tabindex="0" aria-label="Eliminar documento" style="opacity:1;position:static"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg></span></button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Fila documento (filas, no tarjetas) + papelera</span><span class="idx-act">openDocument(doc) · deleteDocument(id, $event)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="idx-empty" style="padding:16px;width:300px">
+            <span>Biblioteca vacía</span>
+            <button class="btn btn--primary">Crear primer documento</button>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Estado vacío</span><span class="idx-act">openDocModal()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--secondary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-left"/></svg>Volver</button>
+          <button class="btn btn--primary">Guardar</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Barra del editor</span><span class="idx-act">goBack() (guarda) · onSaveAndGoBack()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><textarea class="field" rows="2" style="width:300px" placeholder="Empieza a escribir..." aria-label="Editor de documento"></textarea></div>
+        <div class="idx-meta"><span class="idx-name">Textarea del editor</span><span class="idx-act">editorContent</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="dialog" style="width:280px;padding:16px;box-shadow:var(--shadow-lift)">
+            <h3 style="font-size:14px;margin-bottom:10px">Nueva carpeta</h3>
+            <input type="text" class="field" placeholder="Nombre de la carpeta" aria-label="Nombre de la carpeta">
+            <div class="dialog-actions" style="margin-top:12px"><button class="btn btn--ghost" style="padding:6px 12px">Cancelar</button><button class="btn btn--primary" style="padding:6px 12px">Crear</button><span class="idx-act" style="align-self:center">+ cierre por overlay</span></div>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Modal carpeta (input, Cancelar, Crear, overlay)</span><span class="idx-act">saveFolder() / cerrar</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="dialog" style="width:280px;padding:16px;box-shadow:var(--shadow-lift)">
+            <h3 style="font-size:14px;margin-bottom:10px">Nuevo documento</h3>
+            <input type="text" class="field" placeholder="Nombre del documento" aria-label="Nombre del documento">
+            <div class="dialog-actions" style="margin-top:12px"><button class="btn btn--ghost" style="padding:6px 12px">Cancelar</button><button class="btn btn--primary" style="padding:6px 12px">Crear</button><span class="idx-act" style="align-self:center">+ cierre por overlay</span></div>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Modal documento (input, Cancelar, Crear, overlay)</span><span class="idx-act">saveDoc() / cerrar</span></div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="panel idx-group">
+      <h3>Calendar</h3>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="icon-btn" aria-label="Mes anterior"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-left"/></svg></button>
+          <button class="icon-btn" aria-label="Mes siguiente"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-right"/></svg></button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Navegación de mes</span><span class="idx-act">prevMonth() · nextMonth()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="day" style="width:110px" role="button" tabindex="0" aria-label="Día con eventos"><span class="d-num">18</span><div class="d-body"><button class="chip"><span class="c-dot" style="background:var(--ev-1)"></span><span>Sesión de estudio</span></button></div></div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Celda de día + chip de evento (button dentro de div role="button", Enter/Espacio)</span><span class="idx-act">openModal(day) · openEventModal(event, $event)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><button class="chip-more num">+2 más</button></div>
+        <div class="idx-meta"><span class="idx-name">«+N más»</span><span class="idx-act">openEventsList(day.events, $event)</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <input type="text" class="field" style="width:200px" placeholder="Ej: Estudiar React" aria-label="Título del evento">
+          <div class="swatches">
+            <button class="swatch is-sel" style="background:var(--ev-1)" aria-label="Color azul"></button>
+            <button class="swatch" style="background:var(--ev-2)" aria-label="Color verde"></button>
+            <button class="swatch" style="background:var(--ev-3)" aria-label="Color rojo"></button>
+            <button class="swatch" style="background:var(--ev-4)" aria-label="Color ámbar"></button>
+            <button class="swatch" style="background:var(--ev-5)" aria-label="Color lila"></button>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Título del evento + 5 muestras de color</span><span class="idx-act">elegir color</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--ghost">Cancelar</button>
+          <button class="btn btn--danger"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>Eliminar</button>
+          <button class="btn btn--primary">Guardar</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Acciones del modal de evento (+ cierre por overlay)</span><span class="idx-act">cerrar · deleteEvent() · saveEvent() · closeModal()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="dialog" style="width:280px;padding:16px;box-shadow:var(--shadow-lift)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <h3 style="font-size:14px;margin:0">Eventos del día</h3>
+              <button class="icon-btn icon-btn--sm" aria-label="Cerrar lista de eventos"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-x"/></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <button class="chip" style="width:auto"><span class="c-dot" style="background:var(--ev-1)"></span><span>Sesión de estudio</span></button>
+              <button class="btn btn--ghost" style="padding:5px 10px;font-size:13px"><svg class="ic ic--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-edit"/></svg>Editar</button>
+            </div>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Modal lista: cierre «x» + Editar por evento</span><span class="idx-act">closeModal() · editFromList(event, $event)</span></div>
+      </div>
+    </div>
+
+    <!-- Notepad -->
+    <div class="panel idx-group">
+      <h3>Notepad</h3>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--primary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-save"/></svg>Guardar en Biblioteca</button>
+          <button class="btn btn--primary" disabled>Guardar en Biblioteca</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Guardar (activo / deshabilitado sin contenido)</span><span class="idx-act">openSaveModal()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="np-toolbar" style="width:fit-content" role="toolbar" aria-label="Demo toolbar">
+            <button class="icon-btn is-active" aria-label="Negrita"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-bold"/></svg></button>
+            <button class="icon-btn" aria-label="Cursiva"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-italic"/></svg></button>
+            <button class="icon-btn" aria-label="Subrayado"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-underline"/></svg></button>
+          </div>
+          <div class="np-editor" contenteditable="true" style="width:220px;min-height:70px" role="textbox" aria-multiline="true" aria-label="Editor"></div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Toolbar B/I/U + editor contenteditable</span><span class="idx-act">format(cmd) · onContentChange()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--secondary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-spark"/></svg>Crear tareas con IA</button>
+          <button class="btn btn--secondary" disabled>Generando...</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">IA (activo / «Generando...» deshabilitado)</span><span class="idx-act">generateTasks()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo" style="flex-direction:column;align-items:flex-start">
+          <div class="alert-error"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-alert"/></svg>No se pudieron crear las tareas con IA.</div>
+          <div class="alert-ok"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check-circle"/></svg>Se crearon 3 tareas a partir de tu nota.</div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Mensajes de estado de IA (error y éxito)</span><span class="idx-act">estado de error / aiSuccessMessage</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <div class="dialog" style="width:280px;padding:16px;box-shadow:var(--shadow-lift)">
+            <h3 style="font-size:14px;margin-bottom:10px">Guardar nota</h3>
+            <input type="text" class="field" placeholder="Nombre de la nota" aria-label="Nombre de la nota">
+            <div class="dialog-actions" style="margin-top:12px"><button class="btn btn--ghost" style="padding:6px 12px">Cancelar</button><button class="btn btn--primary" style="padding:6px 12px">Guardar</button><span class="idx-act" style="align-self:center">+ cierre por overlay</span></div>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Modal guardar (input, Cancelar, Guardar, overlay)</span><span class="idx-act">saveToLibrary()</span></div>
+      </div>
+    </div>
+
+    <!-- Login -->
+    <div class="panel idx-group">
+      <h3>Login</h3>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <input type="email" class="field" style="width:200px" placeholder="tu@correo.com" aria-label="Email">
+          <div class="pw-wrap" style="width:200px">
+            <input type="password" class="field" placeholder="Tu contraseña" aria-label="Contraseña">
+            <button class="icon-btn" aria-label="Mostrar contraseña"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-eye"/></svg></button>
+          </div>
+          <div class="pw-wrap" style="width:200px">
+            <input type="text" class="field" value="contraseña visible" aria-label="Contraseña visible">
+            <button class="icon-btn" aria-label="Ocultar contraseña"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-eye-off"/></svg></button>
+          </div>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Email + contraseña + ojo (mostrar/ocultar)</span><span class="idx-act">formulario · toggleOjo()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--primary">Iniciar sesion</button>
+          <button class="btn btn--primary" disabled>Cargando...</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Submit (activo / «Cargando...»)</span><span class="idx-act">login()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><p class="auth-foot">¿No tenés cuenta? <a href="#">Registrate</a></p></div>
+        <div class="idx-meta"><span class="idx-name">Enlace a registro</span><span class="idx-act">routerLink="/signup"</span></div>
+      </div>
+    </div>
+
+    <!-- Signup -->
+    <div class="panel idx-group">
+      <h3>Signup</h3>
+      <div class="idx-row">
+        <div class="idx-demo" style="flex-direction:column;align-items:flex-start">
+          <input type="text" class="field" style="width:200px" placeholder="Tu nombre" aria-label="Nombre">
+          <input type="email" class="field" style="width:200px" placeholder="tu@correo.com" aria-label="Email">
+          <input type="password" class="field" style="width:200px" placeholder="Mínimo 8 caracteres" aria-label="Contraseña">
+          <input type="password" class="field" style="width:200px" placeholder="Repetí la contraseña" aria-label="Confirmar contraseña">
+        </div>
+        <div class="idx-meta"><span class="idx-name">Inputs: nombre, email, contraseña, confirmar</span><span class="idx-act">formulario de registro</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo">
+          <button class="btn btn--primary">Crear cuenta</button>
+          <button class="btn btn--primary" disabled>Registrando...</button>
+        </div>
+        <div class="idx-meta"><span class="idx-name">Submit (activo / «Registrando...»)</span><span class="idx-act">register()</span></div>
+      </div>
+      <div class="idx-row">
+        <div class="idx-demo"><p class="auth-foot">¿Ya tenés cuenta? <a href="#">Inicia sesion</a></p></div>
+        <div class="idx-meta"><span class="idx-name">Enlace a login</span><span class="idx-act">routerLink="/login"</span></div>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="panel idx-group">
+      <h3>Statistics</h3>
+      <p class="idx-note">Sin controles, como en la app actual. Obligaciones de lectura presentes en la sección 6:
+         métrica principal con jerarquía propia + 3 métricas secundarias, gráfico semanal y barras de progreso.</p>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+(function(){
+  'use strict';
+  /* JS mínimo: colapso del sidebar + abrir/cerrar el modal (demo) */
+  var sidebar = document.getElementById('demo-sidebar');
+  var toggle = document.getElementById('demo-sidebar-toggle');
+  toggle.addEventListener('click', function(){
+    var collapsed = sidebar.classList.toggle('is-collapsed');
+    toggle.setAttribute('aria-label', collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral');
+  });
+
+  function openModal(layer){
+    layer.classList.add('is-open');
+    var input = layer.querySelector('input');
+    if (input) input.focus();
+  }
+  function closeModal(layer){ layer.classList.remove('is-open'); }
+
+  /* Biblioteca: modal «Nueva carpeta» */
+  var folderLayer = document.getElementById('modal-carpeta');
+  document.getElementById('btn-nueva-carpeta').addEventListener('click', function(){ openModal(folderLayer); });
+  folderLayer.querySelector('[data-scrim]').addEventListener('click', function(){ closeModal(folderLayer); });
+  folderLayer.querySelectorAll('[data-close]').forEach(function(b){
+    b.addEventListener('click', function(){ closeModal(folderLayer); });
+  });
+
+  /* Calendario: celda de día (role="button" con teclado) y modal de evento */
+  var eventLayer = document.getElementById('modal-evento');
+  var demoCell = document.getElementById('celda-demo');
+  demoCell.addEventListener('click', function(){ openModal(eventLayer); });
+  demoCell.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openModal(eventLayer); }
+  });
+  demoCell.querySelectorAll('.chip, .chip-more').forEach(function(chip){
+    chip.addEventListener('click', function(e){ e.stopPropagation(); });
+  });
+  eventLayer.querySelector('[data-scrim]').addEventListener('click', function(){ closeModal(eventLayer); });
+  eventLayer.querySelectorAll('[data-close]').forEach(function(b){
+    b.addEventListener('click', function(){ closeModal(eventLayer); });
+  });
+})();
+</script>
+</body>
+</html>

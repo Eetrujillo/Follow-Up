@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Follow-Up — Dirección C «Riel único»</title>
+<style>
+  /* ============ Tokens — Dirección C «Riel único» ============ */
+  :root{
+    --canvas:#0a0b0b;        /* fondo general */
+    --rail:#0e0f0f;          /* riel de iconos 64px */
+    --panel:#141616;         /* panel flotante 232px */
+    --elev:#191c1c;          /* superficie de elevación (modales, hover) */
+    --hairline:rgba(255,255,255,.09);
+    --text-1:#f2f4f3;
+    --text-2:#9aa3a0;
+    --text-3:#6f7876;        /* solo texto grande (≥3:1) */
+    --accent:#5fd9b0;        /* acento único menta */
+    --accent-dim:rgba(95,217,176,.16);
+    --danger:#e06c5f;
+    --ev-1:#5fd9b0; --ev-2:#7aa5f7; --ev-3:#e6b45c; --ev-4:#e06c5f; --ev-5:#b48ce8;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --t-fast:150ms;
+    --rail-w:64px;
+    --panel-w:232px;
+    --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  html{background:var(--canvas)}
+  body{
+    font-family:var(--font-body);
+    font-size:15px;line-height:1.55;
+    color:var(--text-1);
+    background:var(--canvas);
+    -webkit-font-smoothing:antialiased;
+    padding:64px 48px 128px;
+  }
+
+  /* Tematizar superficies del navegador */
+  ::selection{background:rgba(95,217,176,.28);color:var(--text-1)}
+  input,textarea,[contenteditable]{caret-color:var(--accent)}
+  *{scrollbar-color:#2b302f transparent;scrollbar-width:thin}
+  *::-webkit-scrollbar{width:10px;height:10px}
+  *::-webkit-scrollbar-thumb{background:#2b302f;border-radius:5px}
+  *::-webkit-scrollbar-track{background:transparent}
+
+  a{
+    color:var(--accent);
+    text-decoration:underline;
+    text-decoration-color:rgba(95,217,176,.4);
+    text-underline-offset:3px;
+    transition:color var(--t-fast) var(--ease),text-decoration-color var(--t-fast) var(--ease);
+  }
+  a:hover{color:#8ce9c8;text-decoration-color:currentColor}
+
+  /* Foco visible en TODO control */
+  :where(a,button,input,[role="button"],[tabindex="0"],textarea,[contenteditable]):focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+    border-radius:2px;
+  }
+
+  /* Micro-feedback + press (S3) */
+  button,[role="button"]{
+    font:inherit;color:inherit;background:none;border:none;cursor:pointer;
+    transition:transform var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease),
+               color var(--t-fast) var(--ease),opacity var(--t-fast) var(--ease),
+               border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease);
+  }
+  button:active,[role="button"]:active{transform:scale(.98)}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+  /* ============ Estructura del artboard ============ */
+  .art{width:100%;max-width:1280px;margin:0 auto}
+  .screen-section{margin-top:112px}
+  .screen-section:first-of-type{margin-top:0}
+
+  h2{
+    font-size:40px;font-weight:600;letter-spacing:-.03em;
+    text-wrap:balance;color:var(--text-1);
+    margin-bottom:36px;
+  }
+  h3{
+    font-size:40px;font-weight:600;letter-spacing:-.03em;
+    text-wrap:balance;color:var(--text-1);
+  }
+  h4{font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--text-1)}
+
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  p,dd,li{max-width:72ch}
+  .muted{color:var(--text-2)}
+
+  .screen{
+    position:relative;
+    background:var(--canvas);
+    border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline);
+    overflow:hidden;
+  }
+
+  /* Nota honesta de deuda (S5) */
+  .tradeoff{
+    margin-top:16px;
+    font-size:13px;line-height:1.5;color:var(--text-2);
+    max-width:72ch;
+  }
+
+  /* ============ Iconos SVG autorados (trazo 1.5, grilla 20) ============ */
+  .ic{width:18px;height:18px;display:block;flex:none}
+  .ic-s{width:16px;height:16px}
+  .ic-l{width:20px;height:20px}
+
+  /* ============ 1 · Shell + Dashboard ============ */
+  .shell-wrap{display:flex;flex-direction:column;gap:28px;align-items:stretch}
+  .shell-demo{height:auto;min-height:600px}
+  .shell-demo.is-pushed .shell-main{margin-left:calc(var(--rail-w) + 232px)}
+  .shell-side{width:100%;display:flex;flex-direction:column;gap:12px}
+  .shell-closed{height:500px;position:relative;overflow:hidden}
+  .side-caption{font-size:13px;color:var(--text-2);padding:0 4px}
+
+  /* Riel de 64px */
+  .rail{
+    position:absolute;top:0;bottom:0;left:0;width:var(--rail-w);
+    background:var(--rail);
+    border-right:1px solid var(--hairline);
+    display:flex;flex-direction:column;align-items:center;
+    padding:16px 0;z-index:20;
+  }
+  .rail-btn{
+    width:40px;height:40px;margin:4px 0;
+    display:grid;place-items:center;
+    color:var(--text-2);border-radius:2px;position:relative;
+  }
+  .rail-btn:hover{background:var(--elev);color:var(--text-1)}
+  .rail-btn.is-active{color:var(--accent)}
+  .rail-btn.is-active::before{
+    content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:2px;background:var(--accent);
+  }
+  .rail-nav{display:flex;flex-direction:column;margin-top:8px}
+  .rail-spacer{flex:1}
+
+  /* Panel flotante de 232px — el único momento autorado de motion (320ms) */
+  .rail-panel{
+    position:absolute;top:0;bottom:0;left:var(--rail-w);width:var(--panel-w);
+    background:var(--panel);
+    border-right:1px solid var(--hairline);
+    box-shadow:24px 0 48px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;z-index:10;
+    opacity:0;visibility:hidden;
+    transform:translateX(-8px);
+    filter:blur(2px);
+    clip-path:inset(0 100% 0 0);
+    transition:transform 320ms var(--ease),opacity 320ms var(--ease),
+               filter 320ms var(--ease),clip-path 320ms var(--ease),
+               visibility 0s 320ms;
+  }
+  .rail-panel.is-open{
+    opacity:1;visibility:visible;
+    transform:none;filter:none;clip-path:inset(0 0 0 0);
+    transition-delay:0s;
+  }
+  /* etiquetas escalonadas 20ms */
+  .rail-panel .panel-link{opacity:0;transform:translateX(-8px)}
+  .rail-panel.is-open .panel-link{
+    opacity:1;transform:none;
+    transition:opacity 280ms var(--ease),transform 280ms var(--ease);
+  }
+  .rail-panel.is-open .panel-nav .panel-link:nth-child(1){transition-delay:60ms}
+  .rail-panel.is-open .panel-nav .panel-link:nth-child(2){transition-delay:80ms}
+  .rail-panel.is-open .panel-nav .panel-link:nth-child(3){transition-delay:100ms}
+  .rail-panel.is-open .panel-nav .panel-link:nth-child(4){transition-delay:120ms}
+  .rail-panel.is-open .panel-nav .panel-link:nth-child(5){transition-delay:140ms}
+  .rail-panel.is-open .panel-footer .panel-link{transition-delay:160ms}
+
+  .panel-search{
+    display:flex;align-items:center;gap:8px;
+    height:56px;padding:0 12px 0 16px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .panel-search input{
+    flex:1;min-width:0;background:none;border:none;
+    font:inherit;font-size:14px;color:var(--text-1);
+  }
+  .panel-search input::placeholder{color:var(--text-2)}
+  .panel-search input:focus{outline:none}
+  .panel-search input:focus-visible{outline:none}
+
+  .panel-nav{display:flex;flex-direction:column;padding:8px 0}
+  .panel-link{
+    display:flex;align-items:center;gap:12px;
+    height:44px;padding:0 16px;
+    font-size:14px;color:var(--text-2);
+    text-decoration:none;border-radius:0;
+  }
+  .panel-link:hover{background:var(--elev);color:var(--text-1)}
+  .panel-link.is-active{color:var(--accent)}
+  .panel-link.is-active:hover{color:var(--accent)}
+  .panel-footer{margin-top:auto;border-top:1px solid var(--hairline);padding:8px 0}
+  .panel-footer .panel-link{color:var(--text-2);width:100%;text-align:left}
+  .panel-footer .panel-link:hover{color:var(--danger);background:var(--elev)}
+
+  /* Contenido de borde a borde */
+  .shell-main{
+    margin-left:var(--rail-w);
+    padding:40px 48px 32px;
+    height:auto;
+  }
+  .shell-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px}
+  .page-title{font-size:44px}
+  .page-date{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--text-2)}
+
+  .row56{
+    display:flex;align-items:center;gap:12px;
+    min-height:56px;
+    border-bottom:1px solid var(--hairline);
+  }
+
+  .task-add{display:flex;align-items:center;gap:12px;height:56px;border-bottom:1px solid var(--hairline)}
+  .task-add input{
+    flex:1;background:none;border:none;
+    font:inherit;font-size:15px;color:var(--text-1);
+  }
+  .task-add input::placeholder{color:var(--text-2)}
+  .task-add input:focus{outline:none}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    height:36px;padding:0 16px;
+    font-size:14px;font-weight:500;
+    border-radius:2px;border:1px solid var(--hairline);
+    color:var(--text-1);background:none;
+  }
+  .btn:hover{background:var(--elev)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#0a0b0b}
+  .btn-primary:hover{background:#7ce4c2;border-color:#7ce4c2}
+  .btn-danger{color:var(--danger)}
+  .btn-danger:hover{background:rgba(224,108,95,.12)}
+
+  .icon-btn{
+    width:32px;height:32px;flex:none;
+    display:grid;place-items:center;
+    color:var(--text-2);border-radius:2px;
+  }
+  .icon-btn:hover{color:var(--text-1);background:var(--elev)}
+  .icon-btn.danger:hover{color:var(--danger);background:rgba(224,108,95,.12)}
+
+  .check{
+    appearance:none;-webkit-appearance:none;
+    width:18px;height:18px;flex:none;
+    border:1.5px solid #4a5150;border-radius:2px;
+    display:grid;place-items:center;cursor:pointer;
+    transition:background-color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease);
+  }
+  .check:hover{border-color:var(--accent)}
+  .check:checked{background:var(--accent);border-color:var(--accent)}
+  .check:checked::after{
+    content:"";width:9px;height:5px;margin-top:-2px;
+    border-left:1.8px solid #0a0b0b;border-bottom:1.8px solid #0a0b0b;
+    transform:rotate(-45deg);
+  }
+  .task-text.done{color:var(--text-3);text-decoration:line-through;text-decoration-color:var(--text-2)}
+
+  .dash-cols{display:flex;gap:56px;margin-top:32px;padding-bottom:32px;border-bottom:1px solid var(--hairline)}
+  .timer-row{display:flex;align-items:center;gap:20px}
+  .timer-readout{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:40px;font-weight:600;letter-spacing:-.02em;color:var(--text-1)}
+  .donut-wrap{display:flex;align-items:center;gap:20px}
+  .donut-figure{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:26px;font-weight:600}
+  .donut-track{stroke:var(--hairline);stroke-width:7;fill:none}
+  .donut-arc{stroke:var(--accent);stroke-width:7;fill:none;stroke-linecap:round}
+
+  .bars{display:flex;align-items:flex-end;gap:10px;height:110px}
+  .bar{flex:1;background:#262b2a;border-radius:2px 2px 0 0;transition:background-color var(--t-fast) var(--ease)}
+  .bar.hot{background:var(--accent)}
+  .bar-labels{display:flex;gap:10px;margin-top:10px}
+  .bar-labels span{flex:1;text-align:center;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--text-2)}
+
+  .activity{list-style:none}
+  .activity .row56:last-child{border-bottom:none}
+  .act-main{flex:1;min-width:0}
+  .act-title{font-size:14px;color:var(--text-1)}
+  .act-sub{font-size:12px;color:var(--text-2)}
+  .act-time{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--text-2)}
+
+  /* ============ 2 · Library ============ */
+  .lib{padding:40px 48px 48px}
+  .lib-head{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:8px}
+  .crumbs{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-2)}
+  .crumbs a{color:var(--text-2)}
+  .crumbs a:hover{color:var(--text-1)}
+  .crumbs [aria-current]{color:var(--text-1);text-decoration:none}
+  .crumb-sep{color:var(--text-3)}
+
+  .folder-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:24px;border-top:1px solid var(--hairline)}
+  .folder-tile{position:relative;padding:24px 20px 20px;border-bottom:1px solid var(--hairline)}
+  .folder-tile + .folder-tile{border-left:1px solid var(--hairline)}
+  .tile-open{display:block;width:100%;text-align:left;padding:0}
+  .tile-name{font-size:16px;font-weight:600;color:var(--text-1);display:block}
+  .tile-count{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--text-2);display:block;margin-top:6px}
+  .tile-open:hover .tile-name{color:var(--accent)}
+  .tile-trash{
+    position:absolute;top:16px;right:12px;
+    opacity:0;
+    transition:opacity var(--t-fast) var(--ease),color var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease);
+  }
+  .folder-tile:hover .tile-trash,
+  .folder-tile:focus-within .tile-trash{opacity:1}
+
+  .doc-row{margin-top:8px}
+
+  /* Modales — sombra + hairline, radio 0 */
+  .modal{position:absolute;inset:0;z-index:30;display:none}
+  .modal.is-open{display:grid;place-items:center}
+  .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,5,.62)}
+  .modal-card{
+    position:relative;width:420px;max-width:calc(100% - 96px);
+    background:var(--elev);
+    border:1px solid var(--hairline);
+    box-shadow:0 24px 64px rgba(0,0,0,.55);
+    padding:32px;
+  }
+  .modal-card h4{font-size:22px;letter-spacing:-.02em;margin-bottom:20px}
+  .field{width:100%;height:44px;padding:0 14px;
+    background:var(--canvas);border:1px solid var(--hairline);border-radius:2px;
+    font:inherit;font-size:14px;color:var(--text-1);
+    transition:border-color var(--t-fast) var(--ease);
+  }
+  .field::placeholder{color:var(--text-2)}
+  .field:hover{border-color:rgba(255,255,255,.18)}
+  textarea.field{height:auto;min-height:96px;padding:12px 14px;resize:vertical;line-height:1.6}
+  .modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
+  .modal-actions .spacer{flex:1}
+
+  /* ============ 3 · Calendar ============ */
+  .cal{padding:40px 48px 48px}
+  .cal-head{display:flex;align-items:center;gap:20px;margin-bottom:24px}
+  .cal-title{font-size:40px;font-weight:600;letter-spacing:-.03em}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--hairline)}
+  .cal-dow{
+    padding:10px 4px;text-align:center;
+    font-family:var(--font-mono);font-size:12px;color:var(--text-2);
+    border-bottom:1px solid var(--hairline);
+  }
+  .cal-cell{
+    min-height:64px;padding:8px 8px 6px;
+    border-bottom:1px solid var(--hairline);
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--text-2);
+    cursor:pointer;
+    transition:background-color var(--t-fast) var(--ease);
+  }
+  .cal-cell:hover{background:var(--elev)}
+  .cal-cell + .cal-cell{border-left:1px solid var(--hairline)}
+  .cal-cell.out{color:var(--text-3);opacity:.5}
+  .cal-cell.today .daynum{
+    color:#0a0b0b;background:var(--accent);
+    display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  }
+  .cal-events{margin-top:6px;display:flex;flex-direction:column;gap:4px;align-items:stretch}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    height:20px;padding:0 8px;
+    font-family:var(--font-body);font-size:11px;color:var(--text-1);
+    background:var(--elev);border-radius:2px;overflow:hidden;white-space:nowrap;
+    transition:background-color var(--t-fast) var(--ease);
+  }
+  .chip:hover{background:#232726}
+  .chip .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .chip-more{background:none;padding:0 8px;height:18px;font-family:var(--font-mono);font-size:11px;color:var(--text-2)}
+  .chip-more:hover{color:var(--text-1);background:var(--elev)}
+
+  .swatches{display:flex;gap:14px;margin:20px 0 4px}
+  .swatch{
+    width:24px;height:24px;border-radius:50%;flex:none;
+    border:none;padding:0;
+    transition:transform var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease);
+  }
+  .swatch:hover{transform:scale(1.12)}
+  .swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--elev),0 0 0 4px var(--accent)}
+
+  /* ============ 4 · Login y Signup ============ */
+  .auth{display:grid;grid-template-columns:1fr 1fr;padding:48px 0}
+  .auth-col{padding:0 64px}
+  .auth-col + .auth-col{border-left:1px solid var(--hairline)}
+  .auth-col h3{font-size:40px;margin-bottom:32px}
+  .auth-field{position:relative;display:flex;align-items:center;margin-bottom:16px}
+  .auth-field .field{padding-right:44px}
+  .auth-field .icon-btn{position:absolute;right:6px}
+  .auth-submit{width:100%;height:44px;margin-top:8px;font-size:15px}
+  .auth-alt{margin-top:20px;font-size:14px;color:var(--text-2)}
+
+  /* ============ 5 · Notepad ============ */
+  .note{padding:40px 48px 48px}
+  .note-toolbar{
+    display:flex;align-items:center;gap:4px;
+    height:48px;border-bottom:1px solid var(--hairline);
+  }
+  .tool-btn{
+    min-width:36px;height:32px;padding:0 10px;
+    display:grid;place-items:center;
+    font-size:15px;color:var(--text-2);border-radius:2px;
+  }
+  .tool-btn:hover{color:var(--text-1);background:var(--elev)}
+  .tool-btn.is-on{color:var(--accent);background:var(--accent-dim)}
+  .tool-btn .i-bold{font-weight:700}
+  .tool-btn .i-ital{font-style:italic;font-family:Georgia,serif}
+  .tool-btn .i-under{text-decoration:underline;text-underline-offset:3px}
+  .editor{
+    min-height:200px;padding:24px 0;
+    font-size:15px;line-height:1.7;color:var(--text-1);
+    caret-color:var(--accent);
+  }
+  .editor:focus{outline:none}
+  .note-actions{display:flex;align-items:center;gap:12px;padding-top:20px;border-top:1px solid var(--hairline)}
+  .ai-error{
+    display:flex;align-items:center;gap:8px;
+    margin-left:auto;
+    font-size:13px;color:var(--danger);
+  }
+  .ai-error::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--danger);flex:none}
+
+  /* ============ 6 · Statistics ============ */
+  .stats{padding:40px 48px 48px}
+  .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--hairline)}
+  .metric{padding:28px 24px 24px;border-bottom:1px solid var(--hairline)}
+  .metric + .metric{border-left:1px solid var(--hairline)}
+  .metric-value{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:40px;font-weight:600;letter-spacing:-.02em}
+  .metric-label{font-size:14px;color:var(--text-2);margin-top:6px}
+  .stat-cols{display:flex;gap:64px;margin-top:40px}
+  .progress-list{list-style:none;flex:1}
+  .progress-list li{margin-bottom:20px}
+  .progress-head{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px}
+  .progress-head .pct{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--text-2)}
+  .track{height:6px;background:#1e2221;border-radius:1px;overflow:hidden}
+  .fill{height:100%;background:var(--accent)}
+
+  /* ============ 7 · Índice de controles ============ */
+  .ctl-group{margin-top:56px}
+  .ctl-group h3{font-size:22px;letter-spacing:-.02em;margin-bottom:8px}
+  .ctl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hairline);border:1px solid var(--hairline);border-left:none;border-right:none}
+  .ctl{background:var(--canvas);padding:20px;min-height:96px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+  .ctl-meta{font-size:13px;color:var(--text-1)}
+  .ctl-action{display:block;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--text-2);margin-top:3px}
+  .ctl-note{font-size:12px;color:var(--text-2);font-style:normal}
+  .ctl-row{display:flex;align-items:center;gap:10px;min-height:40px;width:100%}
+  .ctl .field{height:36px;font-size:13px}
+  .ctl .btn{height:32px;padding:0 12px;font-size:13px}
+  .ctl .icon-btn{width:28px;height:28px}
+  .ctl .chip{height:22px}
+  .ctl .swatch{width:20px;height:20px}
+
+  .result-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:2px;cursor:pointer;transition:background-color var(--t-fast) var(--ease)}
+  .result-row:hover{background:var(--elev)}
+  .result-kind{font-family:var(--font-mono);font-size:11px;color:var(--text-2);flex:none;width:78px}
+  .result-title{font-size:13px;color:var(--text-1)}
+  .result-sub{font-size:11px;color:var(--text-2)}
+
+  .mini-modal{
+    width:100%;background:var(--elev);border:1px solid var(--hairline);
+    box-shadow:0 12px 32px rgba(0,0,0,.45);padding:16px;
+  }
+  .mini-modal h5{font-size:14px;font-weight:600;margin-bottom:12px}
+  .mini-modal .modal-actions{margin-top:14px}
+
+  /* ============ Reduced motion ============ */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      transition-duration:.01ms !important;
+      transition-delay:0ms !important;
+      animation-duration:.01ms !important;
+      animation-iteration-count:1 !important;
+    }
+    .rail-panel .panel-link{opacity:1;transform:none}
+    .swatch:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Sprite de iconos autorados: trazo 1.5px, grilla 20px -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-panel" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.5" y="4" width="13" height="12" rx="1"/><line x1="8" y1="4" x2="8" y2="16"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="9" r="5"/><line x1="12.6" y1="12.6" x2="16.5" y2="16.5"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="6" y1="6" x2="14" y2="14"/><line x1="14" y1="6" x2="6" y2="14"/>
+    </symbol>
+    <symbol id="i-home" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 9.5 10 3.5l6.5 6"/><path d="M5.5 9v7.5h9V9"/>
+    </symbol>
+    <symbol id="i-folder" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 15.5V4.5h5l2 2.5h6v8.5z"/>
+    </symbol>
+    <symbol id="i-calendar" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.5" y="5" width="13" height="11.5" rx="1"/><line x1="7" y1="3" x2="7" y2="6"/><line x1="13" y1="3" x2="13" y2="6"/><line x1="3.5" y1="8.5" x2="16.5" y2="8.5"/>
+    </symbol>
+    <symbol id="i-chart" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 3.5v13h13"/><path d="M7.5 13.5V10"/><path d="M11 13.5V6.5"/><path d="M14.5 13.5V9"/>
+    </symbol>
+    <symbol id="i-note" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3.5" width="12" height="13" rx="1"/><line x1="7" y1="7.5" x2="13" y2="7.5"/><line x1="7" y1="10.5" x2="13" y2="10.5"/><line x1="7" y1="13.5" x2="10.5" y2="13.5"/>
+    </symbol>
+    <symbol id="i-logout" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 4H4v12h4"/><path d="M10.5 10H17"/><path d="M14.5 7.5 17 10l-2.5 2.5"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="10" y1="5" x2="10" y2="15"/><line x1="5" y1="10" x2="15" y2="10"/>
+    </symbol>
+    <symbol id="i-trash" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 6.5h12"/><path d="M7.5 6.5V4.5h5v2"/><path d="M5.8 6.5l.7 9.5h7l.7-9.5"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 20 20">
+      <path d="M7.5 5.5v9l7.5-4.5z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-pause" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="8" y1="6" x2="8" y2="14"/><line x1="12" y1="6" x2="12" y2="14"/>
+    </symbol>
+    <symbol id="i-reset" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.6 6.2A5.2 5.2 0 1 0 15.5 10"/><path d="M15.8 3.5v3h-3"/>
+    </symbol>
+    <symbol id="i-chev-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5 7.5 10l4.5 5"/>
+    </symbol>
+    <symbol id="i-chev-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 5l4.5 5L8 15"/>
+    </symbol>
+    <symbol id="i-eye" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/>
+    </symbol>
+    <symbol id="i-eye-off" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><line x1="4.5" y1="15.5" x2="15.5" y2="4.5"/>
+    </symbol>
+    <symbol id="i-doc" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 3.5h7l3 3v10H5z"/><path d="M12 3.5v3h3"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="art">
+
+  <!-- ================================================================
+       1 · Shell + Dashboard
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s1-h">
+    <h2 id="s1-h">Shell + Dashboard</h2>
+
+    <div class="shell-wrap">
+      <!-- Shell con el panel del riel desplegado -->
+      <div class="screen shell-demo is-pushed">
+        <nav class="rail" aria-label="Riel de navegación">
+          <button class="rail-btn" type="button" id="railToggle" aria-expanded="true" aria-controls="railPanel" aria-label="Desplegar panel de navegación" onclick="togglePanel(this)">
+            <svg class="ic ic-l" aria-hidden="true"><use href="#i-panel"/></svg>
+          </button>
+          <div class="rail-nav">
+            <a class="rail-btn is-active" href="#" aria-label="Panel Principal" aria-current="page"><svg class="ic ic-l" aria-hidden="true"><use href="#i-home"/></svg></a>
+            <a class="rail-btn" href="#" aria-label="Biblioteca"><svg class="ic ic-l" aria-hidden="true"><use href="#i-folder"/></svg></a>
+            <a class="rail-btn" href="#" aria-label="Calendario"><svg class="ic ic-l" aria-hidden="true"><use href="#i-calendar"/></svg></a>
+            <a class="rail-btn" href="#" aria-label="Estadisticas"><svg class="ic ic-l" aria-hidden="true"><use href="#i-chart"/></svg></a>
+            <a class="rail-btn" href="#" aria-label="Bloc de Notas"><svg class="ic ic-l" aria-hidden="true"><use href="#i-note"/></svg></a>
+          </div>
+          <span class="rail-spacer"></span>
+          <button class="rail-btn" type="button" aria-label="Cerrar sesion"><svg class="ic ic-l" aria-hidden="true"><use href="#i-logout"/></svg></button>
+        </nav>
+
+        <aside class="rail-panel is-open" id="railPanel" aria-label="Panel de navegación">
+          <div class="panel-search">
+            <input type="search" placeholder="Buscar..." aria-label="Buscar">
+            <button class="icon-btn" type="button" aria-label="Limpiar busqueda" hidden><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <nav class="panel-nav" aria-label="Secciones">
+            <a class="panel-link is-active" href="#" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Panel Principal</span></a>
+            <a class="panel-link" href="#"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span>Biblioteca</span></a>
+            <a class="panel-link" href="#"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><span>Calendario</span></a>
+            <a class="panel-link" href="#"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><span>Estadisticas</span></a>
+            <a class="panel-link" href="#"><svg class="ic" aria-hidden="true"><use href="#i-note"/></svg><span>Bloc de Notas</span></a>
+          </nav>
+          <div class="panel-footer">
+            <button class="panel-link" type="button"><svg class="ic" aria-hidden="true"><use href="#i-logout"/></svg><span>Cerrar sesion</span></button>
+          </div>
+        </aside>
+
+        <main class="shell-main">
+          <header class="shell-head">
+            <h3 class="page-title">Panel Principal</h3>
+            <p class="page-date">lunes 16 feb 2026 · 09:41</p>
+          </header>
+
+          <form class="task-add" style="margin-top:32px" onsubmit="return false">
+            <input type="text" placeholder="Nueva tarea..." aria-label="Nueva tarea">
+            <button class="btn btn-primary" type="button" aria-label="Agregar tarea" style="width:36px;padding:0">
+              <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>
+            </button>
+          </form>
+
+          <ul class="task-list" style="list-style:none">
+            <li class="row56">
+              <input type="checkbox" class="check" checked aria-label="Completar: Enviar informe semanal">
+              <span class="task-text done" style="flex:1">Enviar informe semanal</span>
+              <button class="icon-btn" type="button" aria-label="Eliminar tarea: Enviar informe semanal"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+            </li>
+            <li class="row56">
+              <input type="checkbox" class="check" aria-label="Completar: Repasar apuntes de React">
+              <span class="task-text" style="flex:1">Repasar apuntes de React</span>
+              <button class="icon-btn" type="button" aria-label="Eliminar tarea: Repasar apuntes de React"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+            </li>
+            <li class="row56">
+              <input type="checkbox" class="check" aria-label="Completar: Preparar reunion con el equipo">
+              <span class="task-text" style="flex:1">Preparar reunion con el equipo</span>
+              <button class="icon-btn" type="button" aria-label="Eliminar tarea: Preparar reunion con el equipo"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+            </li>
+          </ul>
+
+          <div class="dash-cols">
+            <div>
+              <h4>Enfoque</h4>
+              <div class="timer-row" style="margin-top:16px">
+                <span class="timer-readout">25:00</span>
+                <button class="icon-btn" type="button" aria-label="Iniciar o pausar temporizador" style="width:40px;height:40px"><svg class="ic ic-l" aria-hidden="true"><use href="#i-play"/></svg></button>
+                <button class="icon-btn" type="button" aria-label="Reiniciar temporizador a 25:00" style="width:40px;height:40px"><svg class="ic ic-l" aria-hidden="true"><use href="#i-reset"/></svg></button>
+              </div>
+            </div>
+            <div>
+              <h4>Productividad de hoy</h4>
+              <div class="donut-wrap" style="margin-top:16px">
+                <svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="68% de tareas completadas hoy">
+                  <circle class="donut-track" cx="42" cy="42" r="30"/>
+                  <circle class="donut-arc" cx="42" cy="42" r="30" stroke-dasharray="128.2 188.5" transform="rotate(-90 42 42)"/>
+                </svg>
+                <span class="donut-figure mono">68%</span>
+              </div>
+            </div>
+            <div>
+              <h4>Semana</h4>
+              <div class="bars" style="margin-top:16px;width:240px" role="img" aria-label="Barras semanales de tareas, el martes es el día más alto">
+                <div class="bar" style="height:44%"></div>
+                <div class="bar" style="height:72%"></div>
+                <div class="bar hot" style="height:92%"></div>
+                <div class="bar" style="height:58%"></div>
+                <div class="bar" style="height:80%"></div>
+                <div class="bar" style="height:26%"></div>
+                <div class="bar" style="height:14%"></div>
+              </div>
+              <div class="bar-labels" style="width:240px">
+                <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:32px">
+            <h4>Actividad reciente</h4>
+            <ul class="activity" style="margin-top:8px">
+              <li class="row56">
+                <span class="act-main"><span class="act-title">Tarea completada · Repasar apuntes de React</span><br><span class="act-sub">Dashboard</span></span>
+                <span class="act-time">hoy 09:12</span>
+              </li>
+              <li class="row56">
+                <span class="act-main"><span class="act-title">Documento guardado · Guia de instalacion</span><br><span class="act-sub">Biblioteca</span></span>
+                <span class="act-time">ayer 18:40</span>
+              </li>
+              <li class="row56">
+                <span class="act-main"><span class="act-title">Evento creado · Estudiar React</span><br><span class="act-sub">Calendario</span></span>
+                <span class="act-time">ayer 16:05</span>
+              </li>
+            </ul>
+          </div>
+        </main>
+      </div>
+
+      <!-- Franja pequeña: el panel cerrado -->
+      <div class="shell-side">
+        <div class="screen shell-closed" aria-label="Shell con el panel del riel cerrado">
+          <nav class="rail" aria-label="Riel cerrado (demostración)">
+            <button class="rail-btn" type="button" aria-expanded="false" aria-controls="railPanel" aria-label="Desplegar panel de navegación (demostración cerrada)" onclick="togglePanel(document.getElementById('railToggle'))">
+              <svg class="ic ic-l" aria-hidden="true"><use href="#i-panel"/></svg>
+            </button>
+            <div class="rail-nav">
+              <a class="rail-btn is-active" href="#" aria-label="Panel Principal" tabindex="-1"><svg class="ic ic-l" aria-hidden="true"><use href="#i-home"/></svg></a>
+              <a class="rail-btn" href="#" aria-label="Biblioteca" tabindex="-1"><svg class="ic ic-l" aria-hidden="true"><use href="#i-folder"/></svg></a>
+              <a class="rail-btn" href="#" aria-label="Calendario" tabindex="-1"><svg class="ic ic-l" aria-hidden="true"><use href="#i-calendar"/></svg></a>
+              <a class="rail-btn" href="#" aria-label="Estadisticas" tabindex="-1"><svg class="ic ic-l" aria-hidden="true"><use href="#i-chart"/></svg></a>
+              <a class="rail-btn" href="#" aria-label="Bloc de Notas" tabindex="-1"><svg class="ic ic-l" aria-hidden="true"><use href="#i-note"/></svg></a>
+            </div>
+            <span class="rail-spacer"></span>
+            <button class="rail-btn" type="button" aria-label="Cerrar sesion" tabindex="-1"><svg class="ic ic-l" aria-hidden="true"><use href="#i-logout"/></svg></button>
+          </nav>
+          <div class="shell-main" aria-hidden="true">
+            <h3 class="page-title" style="font-size:32px">Biblioteca</h3>
+            <div style="margin-top:32px">
+              <div class="row56"><span style="flex:1;color:var(--text-2)">Guias de estudio</span></div>
+              <div class="row56"><span style="flex:1;color:var(--text-2)">Trabajo</span></div>
+              <div class="row56"><span style="flex:1;color:var(--text-2)">Personal</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="side-caption">Panel cerrado: el contenido ocupa todo el ancho, de borde a borde.</p>
+      </div>
+    </div>
+
+    <p class="tradeoff">Deuda asumida: con el riel único, el buscador deja de estar siempre visible — queda a un clic, detrás del primer botón del riel. A cambio, el contenido gana ~168px de ancho y la navegación se reduce a iconos. El buscador vive en la cabecera del panel desplegado.</p>
+  </section>
+
+  <!-- ================================================================
+       2 · Library
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s2-h">
+    <h2 id="s2-h">Library</h2>
+
+    <div class="screen" style="min-height:560px">
+      <div class="lib">
+        <div class="lib-head">
+          <nav class="crumbs" aria-label="Migas de pan">
+            <a href="#">Follow-up</a>
+            <span class="crumb-sep" aria-hidden="true">/</span>
+            <span aria-current="page">Biblioteca</span>
+          </nav>
+          <button class="btn" type="button">
+            <svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"/></svg>
+            Nueva carpeta
+          </button>
+        </div>
+
+        <div class="folder-grid">
+          <div class="folder-tile">
+            <button class="tile-open" type="button">
+              <span class="tile-name">Guias de estudio</span>
+              <span class="tile-count">12 documentos</span>
+            </button>
+            <button class="icon-btn tile-trash" type="button" aria-label="Eliminar carpeta: Guias de estudio"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+          <div class="folder-tile">
+            <button class="tile-open" type="button">
+              <span class="tile-name">Trabajo</span>
+              <span class="tile-count">8 documentos</span>
+            </button>
+            <button class="icon-btn tile-trash" type="button" aria-label="Eliminar carpeta: Trabajo"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+          <div class="folder-tile">
+            <button class="tile-open" type="button">
+              <span class="tile-name">Personal</span>
+              <span class="tile-count">5 documentos</span>
+            </button>
+            <button class="icon-btn tile-trash" type="button" aria-label="Eliminar carpeta: Personal"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+          <div class="folder-tile">
+            <button class="tile-open" type="button">
+              <span class="tile-name">React</span>
+              <span class="tile-count">3 documentos</span>
+            </button>
+            <button class="icon-btn tile-trash" type="button" aria-label="Eliminar carpeta: React"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+        </div>
+
+        <ul style="list-style:none;margin-top:32px">
+          <li class="row56 doc-row">
+            <svg class="ic" style="color:var(--text-2)" aria-hidden="true"><use href="#i-doc"/></svg>
+            <span style="flex:1">Guia de instalacion de Angular</span>
+            <span class="mono" style="font-size:13px;color:var(--text-2)">Creado el 12 feb 2026</span>
+            <button class="icon-btn" type="button" aria-label="Eliminar documento: Guia de instalacion de Angular"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Modal «Nueva carpeta» abierto -->
+      <div class="modal is-open" id="modalFolder" role="dialog" aria-modal="true" aria-labelledby="modalFolderTitle">
+        <div class="modal-backdrop" onclick="closeModal('modalFolder')"></div>
+        <div class="modal-card">
+          <h4 id="modalFolderTitle">Nueva carpeta</h4>
+          <input class="field" type="text" placeholder="Nombre de la carpeta" aria-label="Nombre de la carpeta">
+          <div class="modal-actions">
+            <button class="btn" type="button" onclick="closeModal('modalFolder')">Cancelar</button>
+            <button class="btn btn-primary" type="button" onclick="closeModal('modalFolder')">Crear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3 · Calendar
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s3-h">
+    <h2 id="s3-h">Calendar</h2>
+
+    <div class="screen" style="min-height:640px">
+      <div class="cal">
+        <div class="cal-head">
+          <button class="icon-btn" type="button" aria-label="Mes anterior" style="width:40px;height:40px"><svg class="ic ic-l" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+          <h3 class="cal-title">Febrero 2026</h3>
+          <button class="icon-btn" type="button" aria-label="Mes siguiente" style="width:40px;height:40px"><svg class="ic ic-l" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        </div>
+
+        <div class="cal-grid">
+          <div class="cal-dow">L</div>
+          <div class="cal-dow">M</div>
+          <div class="cal-dow">X</div>
+          <div class="cal-dow">J</div>
+          <div class="cal-dow">V</div>
+          <div class="cal-dow">S</div>
+          <div class="cal-dow">D</div>
+
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">26</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">27</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">28</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">29</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">30</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">31</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">1</span></div>
+
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="2 de febrero, sin eventos"><span class="daynum">2</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="3 de febrero, sin eventos"><span class="daynum">3</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="4 de febrero, sin eventos"><span class="daynum">4</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="5 de febrero, sin eventos"><span class="daynum">5</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="6 de febrero, sin eventos"><span class="daynum">6</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="7 de febrero, sin eventos"><span class="daynum">7</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="8 de febrero, sin eventos"><span class="daynum">8</span></div>
+
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="9 de febrero, sin eventos"><span class="daynum">9</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="10 de febrero, sin eventos"><span class="daynum">10</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="11 de febrero, sin eventos"><span class="daynum">11</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="12 de febrero, sin eventos"><span class="daynum">12</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="13 de febrero, sin eventos"><span class="daynum">13</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="14 de febrero, sin eventos"><span class="daynum">14</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="15 de febrero, sin eventos"><span class="daynum">15</span></div>
+
+          <div class="cal-cell today" role="button" tabindex="0" data-open="modalEvent" aria-label="16 de febrero, hoy, sin eventos"><span class="daynum">16</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="17 de febrero, sin eventos"><span class="daynum">17</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="18 de febrero, 4 eventos">
+            <span class="daynum">18</span>
+            <div class="cal-events">
+              <button class="chip" type="button" data-open="modalEvent"><span class="dot" style="background:var(--ev-2)"></span>Estudiar React</button>
+              <button class="chip" type="button" data-open="modalEvent"><span class="dot" style="background:var(--ev-1)"></span>Gym</button>
+              <button class="chip chip-more" type="button" data-open="modalEvent" aria-label="2 eventos más del 18 de febrero">+2 más</button>
+            </div>
+          </div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="19 de febrero, sin eventos"><span class="daynum">19</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="20 de febrero, sin eventos"><span class="daynum">20</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="21 de febrero, sin eventos"><span class="daynum">21</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="22 de febrero, sin eventos"><span class="daynum">22</span></div>
+
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="23 de febrero, sin eventos"><span class="daynum">23</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="24 de febrero, sin eventos"><span class="daynum">24</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="25 de febrero, sin eventos"><span class="daynum">25</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="26 de febrero, sin eventos"><span class="daynum">26</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="27 de febrero, sin eventos"><span class="daynum">27</span></div>
+          <div class="cal-cell" role="button" tabindex="0" data-open="modalEvent" aria-label="28 de febrero, sin eventos"><span class="daynum">28</span></div>
+          <div class="cal-cell out" aria-hidden="true"><span class="daynum">1</span></div>
+        </div>
+      </div>
+
+      <!-- Modal de evento abierto -->
+      <div class="modal is-open" id="modalEvent" role="dialog" aria-modal="true" aria-labelledby="modalEventTitle">
+        <div class="modal-backdrop" onclick="closeModal('modalEvent')"></div>
+        <div class="modal-card">
+          <h4 id="modalEventTitle">Evento · 18 de febrero</h4>
+          <input class="field" type="text" value="Estudiar React" aria-label="Título del evento" placeholder="Ej: Estudiar React">
+          <div class="swatches" role="group" aria-label="Color del evento">
+            <button class="swatch" type="button" style="background:var(--ev-1)" aria-pressed="true" aria-label="Color menta"></button>
+            <button class="swatch" type="button" style="background:var(--ev-2)" aria-pressed="false" aria-label="Color azul"></button>
+            <button class="swatch" type="button" style="background:var(--ev-3)" aria-pressed="false" aria-label="Color ámbar"></button>
+            <button class="swatch" type="button" style="background:var(--ev-4)" aria-pressed="false" aria-label="Color coral"></button>
+            <button class="swatch" type="button" style="background:var(--ev-5)" aria-pressed="false" aria-label="Color lila"></button>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" type="button" onclick="closeModal('modalEvent')">Cancelar</button>
+            <span class="spacer"></span>
+            <button class="btn btn-danger" type="button" onclick="closeModal('modalEvent')">Eliminar</button>
+            <button class="btn btn-primary" type="button" onclick="closeModal('modalEvent')">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       4 · Login y Signup
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s4-h">
+    <h2 id="s4-h">Login y Signup</h2>
+
+    <div class="screen">
+      <div class="auth">
+        <section class="auth-col" aria-labelledby="auth-login">
+          <h3 id="auth-login">Iniciar sesion</h3>
+          <form onsubmit="return false">
+            <div class="auth-field">
+              <input class="field" type="email" placeholder="Email" aria-label="Email" autocomplete="email">
+            </div>
+            <div class="auth-field">
+              <input class="field" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
+              <button class="icon-btn" type="button" aria-label="Mostrar contraseña"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></button>
+            </div>
+            <button class="btn btn-primary auth-submit" type="submit">Iniciar sesion</button>
+          </form>
+          <p class="auth-alt">¿No tenés cuenta? <a href="#">Registrate</a></p>
+        </section>
+
+        <section class="auth-col" aria-labelledby="auth-signup">
+          <h3 id="auth-signup">Crear cuenta</h3>
+          <form onsubmit="return false">
+            <div class="auth-field">
+              <input class="field" type="text" placeholder="Nombre" aria-label="Nombre" autocomplete="name">
+            </div>
+            <div class="auth-field">
+              <input class="field" type="email" placeholder="Email" aria-label="Email" autocomplete="email">
+            </div>
+            <div class="auth-field">
+              <input class="field" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="new-password">
+            </div>
+            <div class="auth-field">
+              <input class="field" type="password" placeholder="Confirmar contraseña" aria-label="Confirmar contraseña" autocomplete="new-password">
+            </div>
+            <button class="btn btn-primary auth-submit" type="submit">Crear cuenta</button>
+          </form>
+          <p class="auth-alt">¿Ya tenés cuenta? <a href="#">Inicia sesion</a></p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       5 · Notepad
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s5-h">
+    <h2 id="s5-h">Notepad</h2>
+
+    <div class="screen" style="min-height:460px">
+      <div class="note">
+        <div class="note-toolbar" role="toolbar" aria-label="Formato de la nota">
+          <button class="tool-btn is-on" type="button" aria-label="Negrita" aria-pressed="true"><span class="i-bold">B</span></button>
+          <button class="tool-btn" type="button" aria-label="Cursiva" aria-pressed="false"><span class="i-ital">I</span></button>
+          <button class="tool-btn" type="button" aria-label="Subrayado" aria-pressed="false"><span class="i-under">U</span></button>
+        </div>
+        <div class="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Cuerpo de la nota" spellcheck="false">
+          <strong>Apuntes de React — clase 4</strong><br><br>
+          Los hooks solo se llaman en el nivel superior del componente. Nunca dentro de condicionales, bucles o funciones anidadas.<br><br>
+          <em>useEffect</em> reemplaza los ciclos de vida de las clases: montaje, actualización y desmontaje viven en un único lugar.
+        </div>
+        <div class="note-actions">
+          <button class="btn btn-primary" type="button">
+            <svg class="ic ic-s" aria-hidden="true"><use href="#i-folder"/></svg>
+            Guardar en Biblioteca
+          </button>
+          <button class="btn" type="button">
+            <svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"/></svg>
+            Crear tareas con IA
+          </button>
+          <p class="ai-error" role="status">No se pudo conectar con el servicio de IA. Revisa tu conexión e inténtalo de nuevo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       6 · Statistics
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s6-h">
+    <h2 id="s6-h">Statistics</h2>
+
+    <div class="screen" style="min-height:480px">
+      <div class="stats">
+        <div class="metric-grid">
+          <div class="metric">
+            <p class="metric-value">128</p>
+            <p class="metric-label">Tareas completadas</p>
+          </div>
+          <div class="metric">
+            <p class="metric-value">6</p>
+            <p class="metric-label">Días de racha</p>
+          </div>
+          <div class="metric">
+            <p class="metric-value">34,5</p>
+            <p class="metric-label">Horas de enfoque</p>
+          </div>
+          <div class="metric">
+            <p class="metric-value">42</p>
+            <p class="metric-label">Documentos creados</p>
+          </div>
+        </div>
+
+        <div class="stat-cols">
+          <div style="flex:1">
+            <h4>Tareas por día</h4>
+            <svg style="margin-top:20px;width:100%;max-width:420px" viewBox="0 0 420 160" role="img" aria-label="Gráfico semanal de tareas completadas">
+              <line x1="8" y1="140" x2="412" y2="140" stroke="rgba(255,255,255,.09)" stroke-width="1"/>
+              <polyline points="30,104 95,72 160,88 225,44 290,58 355,84 405,112" fill="none" stroke="#5fd9b0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <g fill="#9aa3a0" font-family="ui-monospace,monospace" font-size="11">
+                <text x="26" y="158">L</text><text x="91" y="158">M</text><text x="156" y="158">X</text><text x="221" y="158">J</text><text x="286" y="158">V</text><text x="351" y="158">S</text><text x="403" y="158">D</text>
+              </g>
+            </svg>
+          </div>
+          <div style="flex:1">
+            <h4>Metas de la semana</h4>
+            <ul class="progress-list" style="margin-top:20px">
+              <li>
+                <div class="progress-head"><span>Tareas completadas</span><span class="pct">82%</span></div>
+                <div class="track"><div class="fill" style="width:82%"></div></div>
+              </li>
+              <li>
+                <div class="progress-head"><span>Horas de enfoque</span><span class="pct">64%</span></div>
+                <div class="track"><div class="fill" style="width:64%"></div></div>
+              </li>
+              <li>
+                <div class="progress-head"><span>Documentos de la semana</span><span class="pct">46%</span></div>
+                <div class="track"><div class="fill" style="width:46%"></div></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <p class="ctl-note" style="margin-top:32px">Statistics no tiene controles: es lectura pura, hoy y en el rediseño.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       7 · Índice de controles
+  ================================================================= -->
+  <section class="screen-section" aria-labelledby="s7-h">
+    <h2 id="s7-h">Índice de controles</h2>
+    <p class="muted" style="margin-bottom:8px">Inventario completo de la app, dibujado en el estilo «Riel único». Cada control conserva su etiqueta y su acción.</p>
+
+    <!-- Shell -->
+    <div class="ctl-group" aria-labelledby="ctl-shell">
+      <h3 id="ctl-shell">Shell</h3>
+      <div class="ctl-grid">
+        <div class="ctl">
+          <button class="rail-btn is-active" type="button" aria-label="Desplegar panel de navegación"><svg class="ic ic-l" aria-hidden="true"><use href="#i-panel"/></svg></button>
+          <p class="ctl-meta">Botón icono «desplegar riel»<span class="ctl-action">toggleSidebar()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row" style="border:1px solid var(--hairline);border-radius:2px;padding:0 8px">
+            <svg class="ic ic-s" style="color:var(--text-2)" aria-hidden="true"><use href="#i-search"/></svg>
+            <input class="field" style="border:none;background:none;flex:1;padding:0;height:36px" type="text" value="React" aria-label="Buscar">
+            <button class="icon-btn" type="button" aria-label="Limpiar busqueda"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <p class="ctl-meta">Buscar... + limpiar (solo con texto)<span class="ctl-action">onSearch() · clearSearch()</span></p>
+        </div>
+        <div class="ctl" style="justify-content:center">
+          <div class="result-row">
+            <span class="result-kind">Documento</span>
+            <span><span class="result-title">Guia de instalacion</span><br><span class="result-sub">Trabajo · Creado el 12 feb 2026</span></span>
+          </div>
+          <p class="ctl-meta">Fila de resultado<span class="ctl-action">goToResult(result)</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row"><svg class="ic" style="color:var(--accent)" aria-hidden="true"><use href="#i-home"/></svg><span style="color:var(--accent);font-size:14px">Panel Principal</span></div>
+          <p class="ctl-meta">Link nav (activo)<span class="ctl-action">routerLink · estado activo</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row"><svg class="ic" style="color:var(--text-2)" aria-hidden="true"><use href="#i-folder"/></svg><span style="font-size:14px;color:var(--text-2)">Biblioteca</span></div>
+          <div class="ctl-row"><svg class="ic" style="color:var(--text-2)" aria-hidden="true"><use href="#i-calendar"/></svg><span style="font-size:14px;color:var(--text-2)">Calendario</span></div>
+          <p class="ctl-meta">Links nav (icono + etiqueta en el panel)<span class="ctl-action">routerLink · estado activo</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row"><svg class="ic" style="color:var(--text-2)" aria-hidden="true"><use href="#i-chart"/></svg><span style="font-size:14px;color:var(--text-2)">Estadisticas</span></div>
+          <div class="ctl-row"><svg class="ic" style="color:var(--text-2)" aria-hidden="true"><use href="#i-note"/></svg><span style="font-size:14px;color:var(--text-2)">Bloc de Notas</span></div>
+          <p class="ctl-meta">Links nav (continuación)<span class="ctl-action">routerLink · estado activo</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn btn-danger" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-logout"/></svg> Cerrar sesion</button>
+          <p class="ctl-meta">Cerrar sesion<span class="ctl-action">logout()</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="ctl-group" aria-labelledby="ctl-dash">
+      <h3 id="ctl-dash">Panel Principal</h3>
+      <div class="ctl-grid">
+        <div class="ctl">
+          <input class="field" type="text" placeholder="Nueva tarea..." aria-label="Nueva tarea" style="flex:1">
+          <p class="ctl-meta">Input de tarea<span class="ctl-action">addTask() con Enter</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn btn-primary" type="button" aria-label="Agregar tarea" style="width:32px;padding:0"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+          <p class="ctl-meta">Botón «+»<span class="ctl-action">addTask()</span></p>
+        </div>
+        <div class="ctl">
+          <input type="checkbox" class="check" aria-label="Completar tarea">
+          <p class="ctl-meta">Checkbox por tarea<span class="ctl-action">onTaskChange(task)</span></p>
+        </div>
+        <div class="ctl">
+          <button class="icon-btn danger" type="button" aria-label="Eliminar tarea"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+          <p class="ctl-meta">Eliminar tarea (por fila)<span class="ctl-action">deleteTask(task.id)</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row">
+            <button class="icon-btn" type="button" aria-label="Iniciar o pausar temporizador"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg></button>
+            <button class="icon-btn" type="button" aria-label="Reiniciar temporizador"><svg class="ic" aria-hidden="true"><use href="#i-reset"/></svg></button>
+            <span class="mono" style="font-size:18px">25:00</span>
+          </div>
+          <p class="ctl-meta">Play/pausa + reinicio<span class="ctl-action">toggleTimer() · stopTimer() → 25:00</span></p>
+        </div>
+        <div class="ctl">
+          <p class="ctl-note">Lectura sin controles: dona de productividad, barras semanales y filas de actividad reciente. El rediseño no agrega ni quita nada acá.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Library -->
+    <div class="ctl-group" aria-labelledby="ctl-lib">
+      <h3 id="ctl-lib">Biblioteca</h3>
+      <div class="ctl-grid">
+        <div class="ctl">
+          <nav class="crumbs"><a href="#">Follow-up</a><span class="crumb-sep">/</span><span aria-current="page">Biblioteca</span></nav>
+          <p class="ctl-meta">Miga con acción<span class="ctl-action">view='folders' / 'documents'</span></p>
+        </div>
+        <div class="ctl">
+          <nav class="crumbs"><span aria-current="page" style="color:var(--text-1)">Guia de instalacion</span></nav>
+          <p class="ctl-meta">Miga sin acción (documento)<span class="ctl-action">—</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"/></svg> Nueva carpeta</button>
+          <p class="ctl-meta">Nueva carpeta<span class="ctl-action">openFolderModal()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row" style="border-top:1px solid var(--hairline);padding-top:10px">
+            <span style="flex:1"><span style="font-size:14px;font-weight:600;display:block">Guias de estudio</span><span class="mono" style="font-size:11px;color:var(--text-2)">12 documentos</span></span>
+            <button class="icon-btn" type="button" aria-label="Eliminar carpeta" style="opacity:1"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+          <p class="ctl-meta">Tarjeta de carpeta + papelera (hover y :focus-within)<span class="ctl-action">openFolder(folder) · deleteFolder(id, $event)</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-l"/></svg> Volver</button>
+          <p class="ctl-meta">‹ Volver (vista documentos / editor)<span class="ctl-action">goBack()</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"/></svg> Nuevo documento</button>
+          <p class="ctl-meta">Nuevo documento<span class="ctl-action">openDocModal()</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn" type="button">Crear primer documento</button>
+          <p class="ctl-meta">Estado vacío<span class="ctl-action">openDocModal()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row">
+            <svg class="ic ic-s" style="color:var(--text-2)" aria-hidden="true"><use href="#i-doc"/></svg>
+            <span style="flex:1;font-size:13px">Guia de instalacion de Angular</span>
+            <span class="mono" style="font-size:11px;color:var(--text-2)">Creado el 12 feb 2026</span>
+            <button class="icon-btn" type="button" aria-label="Eliminar documento" style="opacity:1"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+          <p class="ctl-meta">Fila de documento + papelera<span class="ctl-action">openDocument(doc) · deleteDocument(id, $event)</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-l"/></svg> Volver</button>
+          <button class="btn btn-primary" type="button" style="margin-left:8px">Guardar</button>
+          <p class="ctl-meta">Editor: volver + guardar<span class="ctl-action">goBack() (guarda) · onSaveAndGoBack()</span></p>
+        </div>
+        <div class="ctl" style="grid-column:span 1">
+          <textarea class="field" rows="2" placeholder="Empieza a escribir..." aria-label="Contenido del documento" style="flex:1"></textarea>
+          <p class="ctl-meta">Editor de documento<span class="ctl-action">editorContent</span></p>
+        </div>
+        <div class="ctl">
+          <div class="mini-modal">
+            <h5>Nueva carpeta</h5>
+            <input class="field" type="text" placeholder="Nombre de la carpeta" aria-label="Nombre de la carpeta">
+            <div class="modal-actions">
+              <button class="btn" type="button">Cancelar</button>
+              <button class="btn btn-primary" type="button">Crear</button>
+            </div>
+          </div>
+          <p class="ctl-meta">Modal carpeta (cierre por overlay)<span class="ctl-action">saveFolder() · cerrar</span></p>
+        </div>
+        <div class="ctl">
+          <div class="mini-modal">
+            <h5>Nuevo documento</h5>
+            <input class="field" type="text" placeholder="Nombre del documento" aria-label="Nombre del documento">
+            <div class="modal-actions">
+              <button class="btn" type="button">Cancelar</button>
+              <button class="btn btn-primary" type="button">Crear</button>
+            </div>
+          </div>
+          <p class="ctl-meta">Modal documento (cierre por overlay)<span class="ctl-action">saveDoc() · cerrar</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="ctl-group" aria-labelledby="ctl-cal">
+      <h3 id="ctl-cal">Calendario</h3>
+      <div class="ctl-grid">
+        <div class="ctl">
+          <div class="ctl-row">
+            <button class="icon-btn" type="button" aria-label="Mes anterior"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+            <button class="icon-btn" type="button" aria-label="Mes siguiente"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+          </div>
+          <p class="ctl-meta">‹ / ›<span class="ctl-action">prevMonth() · nextMonth()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="cal-cell" role="button" tabindex="0" style="position:static;min-height:56px;max-width:120px"><span class="daynum">18</span></div>
+          <p class="ctl-meta">Celda de día<span class="ctl-action">openModal(day)</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row">
+            <button class="chip" type="button"><span class="dot" style="background:var(--ev-2)"></span>Estudiar React</button>
+          </div>
+          <p class="ctl-meta">Etiqueta de evento (máx. 2 por celda)<span class="ctl-action">openEventModal(event, $event)</span></p>
+        </div>
+        <div class="ctl">
+          <button class="chip chip-more" type="button" style="opacity:1">+2 más</button>
+          <p class="ctl-meta">«+N más»<span class="ctl-action">openEventsList(day.events, $event)</span></p>
+        </div>
+        <div class="ctl">
+          <p class="ctl-note">Cierre del modal por overlay y tecla Esc.</p>
+          <p class="ctl-meta">Overlay<span class="ctl-action">closeModal()</span></p>
+        </div>
+        <div class="ctl">
+          <input class="field" type="text" placeholder="Ej: Estudiar React" aria-label="Título del evento" style="flex:1">
+          <p class="ctl-meta">Título del evento<span class="ctl-action">v-model del título</span></p>
+        </div>
+        <div class="ctl">
+          <div class="swatches">
+            <button class="swatch" type="button" style="background:var(--ev-1)" aria-pressed="true" aria-label="Color menta"></button>
+            <button class="swatch" type="button" style="background:var(--ev-2)" aria-pressed="false" aria-label="Color azul"></button>
+            <button class="swatch" type="button" style="background:var(--ev-3)" aria-pressed="false" aria-label="Color ámbar"></button>
+            <button class="swatch" type="button" style="background:var(--ev-4)" aria-pressed="false" aria-label="Color coral"></button>
+            <button class="swatch" type="button" style="background:var(--ev-5)" aria-pressed="false" aria-label="Color lila"></button>
+          </div>
+          <p class="ctl-meta">5 muestras de color<span class="ctl-action">elegir color</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row" style="gap:8px;flex-wrap:wrap">
+            <button class="btn" type="button">Cancelar</button>
+            <button class="btn btn-danger" type="button">Eliminar</button>
+            <button class="btn btn-primary" type="button">Guardar</button>
+          </div>
+          <p class="ctl-meta">Acciones del modal de evento (Eliminar solo al editar)<span class="ctl-action">cerrar · deleteEvent() · saveEvent()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="mini-modal">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <h5 style="margin:0">18 de febrero</h5>
+              <button class="icon-btn" type="button" aria-label="Cerrar lista de eventos"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"/></svg></button>
+            </div>
+            <div class="ctl-row" style="border-top:1px solid var(--hairline)">
+              <button class="chip" type="button" style="opacity:1"><span class="dot" style="background:var(--ev-2)"></span>Estudiar React</button>
+              <span style="flex:1"></span>
+              <button class="btn" type="button">Editar</button>
+            </div>
+          </div>
+          <p class="ctl-meta">Modal lista: cierre + editar por evento<span class="ctl-action">editFromList(event, $event)</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notepad -->
+    <div class="ctl-group" aria-labelledby="ctl-note">
+      <h3 id="ctl-note">Bloc de Notas</h3>
+      <div class="ctl-grid">
+        <div class="ctl">
+          <button class="btn btn-primary" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-folder"/></svg> Guardar en Biblioteca</button>
+          <button class="btn btn-primary" type="button" disabled style="margin-top:4px">Guardar en Biblioteca</button>
+          <p class="ctl-meta">Guardar (deshabilitado sin contenido o sobre el límite)<span class="ctl-action">openSaveModal()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="note-toolbar" style="border:none;height:auto" role="toolbar" aria-label="Formato de la nota (índice)">
+            <button class="tool-btn is-on" type="button" aria-label="Negrita"><span class="i-bold">B</span></button>
+            <button class="tool-btn" type="button" aria-label="Cursiva"><span class="i-ital">I</span></button>
+            <button class="tool-btn" type="button" aria-label="Subrayado"><span class="i-under">U</span></button>
+          </div>
+          <p class="ctl-meta">Barra de herramientas (vacía hoy; format() ya existe en el .ts)<span class="ctl-action">format(cmd) · isActive()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="editor" contenteditable="false" style="min-height:0;border:1px solid var(--hairline);border-radius:2px;padding:12px;font-size:13px">Los hooks solo se llaman en el nivel superior…</div>
+          <p class="ctl-meta">Editor contenteditable<span class="ctl-action">onContentChange() · onKeyDown · onPaste</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"/></svg> Crear tareas con IA</button>
+          <button class="btn" type="button" disabled style="margin-top:4px">Generando...</button>
+          <p class="ctl-meta">Tareas con IA (deshabilitado mientras genera)<span class="ctl-action">generateTasks()</span></p>
+        </div>
+        <div class="ctl">
+          <p class="ai-error" role="status" style="margin-left:0">No se pudo conectar con el servicio de IA. Revisa tu conexión e inténtalo de nuevo.</p>
+          <p class="ctl-meta">Mensaje de error de IA (y estado de éxito, hoy oculto)<span class="ctl-action">aiErrorMessage · aiSuccessMessage</span></p>
+        </div>
+        <div class="ctl">
+          <div class="mini-modal">
+            <h5>Guardar nota</h5>
+            <input class="field" type="text" placeholder="Nombre de la nota" aria-label="Nombre de la nota">
+            <div class="modal-actions">
+              <button class="btn" type="button">Cancelar</button>
+              <button class="btn btn-primary" type="button">Guardar</button>
+            </div>
+          </div>
+          <p class="ctl-meta">Modal guardar (cierre por overlay)<span class="ctl-action">saveToLibrary() · cerrar</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login / Signup -->
+    <div class="ctl-group" aria-labelledby="ctl-auth">
+      <h3 id="ctl-auth">Login y Signup</h3>
+      <div class="ctl-grid">
+        <div class="ctl">
+          <input class="field" type="email" placeholder="Email" aria-label="Email" style="flex:1">
+          <p class="ctl-meta">Input email<span class="ctl-action">login()</span></p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-row" style="border:1px solid var(--hairline);border-radius:2px;padding:0 4px 0 0">
+            <input class="field" type="password" value="contraseña" aria-label="Contraseña" style="border:none;background:none;flex:1;height:36px">
+            <button class="icon-btn" type="button" aria-label="Mostrar contraseña"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"/></svg></button>
+            <button class="icon-btn" type="button" aria-label="Ocultar contraseña"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye-off"/></svg></button>
+          </div>
+          <p class="ctl-meta">Contraseña + ojo<span class="ctl-action">toggleOjo()</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn btn-primary" type="button" style="min-width:140px">Iniciar sesion</button>
+          <button class="btn btn-primary" type="button" disabled style="min-width:140px;margin-top:4px">Cargando...</button>
+          <p class="ctl-meta">Submit (deshabilitado al cargar)<span class="ctl-action">login()</span></p>
+        </div>
+        <div class="ctl">
+          <p class="auth-alt" style="margin:0">¿No tenés cuenta? <a href="#">Registrate</a></p>
+          <p class="ctl-meta">Enlace a registro<span class="ctl-action">routerLink="/signup"</span></p>
+        </div>
+        <div class="ctl">
+          <input class="field" type="text" placeholder="Nombre" aria-label="Nombre" style="flex:1">
+          <input class="field" type="email" placeholder="Email" aria-label="Email de registro" style="flex:1;margin-top:6px">
+          <p class="ctl-meta">Inputs nombre + email<span class="ctl-action">register()</span></p>
+        </div>
+        <div class="ctl">
+          <input class="field" type="password" placeholder="Contraseña" aria-label="Contraseña de registro" style="flex:1">
+          <input class="field" type="password" placeholder="Confirmar contraseña" aria-label="Confirmar contraseña" style="flex:1;margin-top:6px">
+          <p class="ctl-meta">Inputs contraseña + confirmar<span class="ctl-action">register()</span></p>
+        </div>
+        <div class="ctl">
+          <button class="btn btn-primary" type="button" style="min-width:140px">Crear cuenta</button>
+          <button class="btn btn-primary" type="button" disabled style="min-width:140px;margin-top:4px">Registrando...</button>
+          <p class="ctl-meta">Submit (deshabilitado al registrar)<span class="ctl-action">register()</span></p>
+        </div>
+        <div class="ctl">
+          <p class="auth-alt" style="margin:0">¿Ya tenés cuenta? <a href="#">Inicia sesion</a></p>
+          <p class="ctl-meta">Enlace a login<span class="ctl-action">routerLink="/login"</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="ctl-group" aria-labelledby="ctl-stats">
+      <h3 id="ctl-stats">Estadisticas</h3>
+      <div class="ctl-grid">
+        <div class="ctl" style="grid-column:span 3;justify-content:center">
+          <p class="ctl-note">Sin controles, hoy y en el rediseño. Obligaciones de lectura: 4 tarjetas de métrica, gráfico semanal y barras de progreso con [style.width.%]. Un rediseño no agrega ni quita controles acá.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  /* JS mínimo: solo el panel del riel y los modales de demostración. */
+  function togglePanel(btn){
+    var panel = document.getElementById('railPanel');
+    var open = panel.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Plegar panel de navegación' : 'Desplegar panel de navegación');
+  }
+
+  function openModal(id){
+    var m = document.getElementById(id);
+    if(!m || m.classList.contains('is-open')) return;
+    m.classList.add('is-open');
+    var f = m.querySelector('input, button');
+    if(f) f.focus();
+  }
+
+  function closeModal(id){
+    var m = document.getElementById(id);
+    if(m) m.classList.remove('is-open');
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      document.querySelectorAll('.modal.is-open').forEach(function(m){ m.classList.remove('is-open'); });
+    }
+  });
+
+  /* Celdas de día: div role="button" con teclado Enter/Espacio cableado */
+  document.querySelectorAll('[role="button"][data-open]').forEach(function(el){
+    el.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        openModal(el.getAttribute('data-open'));
+      }
+    });
+    el.addEventListener('click', function(){ openModal(el.getAttribute('data-open')); });
+  });
+
+  /* Los chips de evento (button reales) también abren el modal sin propagar a la celda */
+  document.querySelectorAll('.chip[data-open]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      openModal(el.getAttribute('data-open'));
+    });
+  });
+</script>
+</body>
+</html>
