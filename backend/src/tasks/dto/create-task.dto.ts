@@ -1,4 +1,9 @@
-import { IsDateString, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+
+export enum TaskOrigin {
+  DASHBOARD = 'DASHBOARD',
+  CALENDAR = 'CALENDAR',
+}
 
 export class CreateTaskDto {
   @IsNotEmpty()
@@ -6,12 +11,11 @@ export class CreateTaskDto {
   @MaxLength(2000)
   description!: string;
 
-  // Only the value the server would pick: a CALENDAR task is minted in /api/calendar.
+  // Kept as accepted for now: narrowing this contract is a product decision that
+  // does not belong in a deploy range. A CALENDAR task minted here has no event.
   @IsOptional()
-  @IsIn(['DASHBOARD'], {
-    message: 'origin solo admite DASHBOARD: las tareas de calendario se crean en /api/calendar',
-  })
-  origin?: 'DASHBOARD';
+  @IsEnum(TaskOrigin)
+  origin?: TaskOrigin;
 
   @IsOptional()
   @IsDateString()

@@ -22,7 +22,6 @@ export class TasksService {
           id: randomUUID(),
           userId,
           description: dto.description,
-          // The DTO accepts only this value, so nothing is rewritten silently.
           origin: dto.origin ?? 'DASHBOARD',
           dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         },
