@@ -93,3 +93,41 @@ títulos de página y chips en 12–13px con peso 500–600. Sin webfonts.
 Reglas duras del proyecto: ningún hex suelto fuera del root; ningún glifo
 Unicode como icono; un solo momento de motion por pantalla; estados completos
 (hover/focus/active/disabled/carga/vacío/error) en todo control.
+
+## Movimiento
+
+El movimiento es parte del contrato visual, no un adorno por pantalla. La fuente de verdad es
+`frontend/src/styles.css` (sección «Capa de movimiento»); ningún componente declara duraciones ni curvas.
+
+### Tokens
+
+| Token | Valor | Rol |
+| --- | --- | --- |
+| `--ease` | `cubic-bezier(.2,.8,.25,1)` | Asentamiento: es la curva que ya existía |
+| `--ease-lock` | `cubic-bezier(.34,.02,0,1)` | Pulsación y estado. Sin overshoot: el rebote lee a juguete |
+| `--ease-exit` | `cubic-bezier(.5,0,.9,.45)` | Salida: acelera |
+| `--ease-ink` | `cubic-bezier(.32,.72,0,1)` | Trazo: arranca rápido, asienta largo |
+| `--t-press` | `90ms` | Feedback de pulsación |
+| `--t-micro` | `120ms` | Retorno de puntero, hover de riel |
+| `--fast` | `140ms` | Estados de control |
+| `--t-enter` | `200ms` | Entrada de elementos creados |
+| `--slow` | `260ms` | Cambio de vista corto |
+| `--t-settle` | `380ms` | Asentamiento de bloque |
+| `--t-scene` | `620ms` | Momento autorado (auth, barras) |
+
+Ninguna curva sale de un sitio de referencia del corpus: tres derivan de `--ease`, que ya estaba en el proyecto.
+
+### Clases compartidas
+
+`.m-reveal` · `.m-stagger` (+ `--m-step`) · `.m-mask` · `.m-press` · `.m-morph`. Se consumen; no se
+redefinen por componente. El estado oculto lo habilita `data-motion="on"` en `<html>`, que aplica el shell
+sólo cuando el script corre: sin JS la página se lee completa.
+
+### Degradación
+
+- Reducción de movimiento: forma (1) del catálogo — se ponen en cero las custom properties de duración y las
+  curvas pasan a `linear`. Un solo camino de código. Las View Transitions se apagan explícitas porque no las
+  alcanza el token, y Chart.js se consulta en JS con `prefersReducedMotion()`.
+- Mobile: rama propia. Sin escalonado (en una columna se lee como una cola), desplazamiento de 6px,
+  asentamiento corto, sin trazo de navegación.
+- Bucles automáticos: **cero**. Donde había uno (`.dot--pulse`, 1s infinito en el dashboard) se eliminó.
